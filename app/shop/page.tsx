@@ -51,7 +51,7 @@ export default function ShopPage() {
                                 name={product.name}
                                 price={product.price}
                                 description={product.description}
-                                image={product.image}
+                                images={product.images}
                                 tag={!product.isAvailable ? { label: "Sold Out", color: "nature" } : product.tag}
                                 className="w-full"
                             />

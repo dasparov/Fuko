@@ -96,7 +96,7 @@ export default function Home() {
                 name={product.name}
                 price={product.price}
                 description={product.description}
-                image={product.image}
+                images={product.images}
                 tag={product.tag}
               />
             ))

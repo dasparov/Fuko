@@ -5,8 +5,11 @@ import { getSiteSettings, SiteSettings } from "@/lib/settings"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 
+import { usePathname } from "next/navigation"
+
 export function AnnouncementBanner() {
     const [settings, setSettings] = useState<SiteSettings | null>(null)
+    const pathname = usePathname()
 
     useEffect(() => {
         setTimeout(() => {
@@ -14,7 +17,7 @@ export function AnnouncementBanner() {
         }, 0)
     }, [])
 
-    if (!settings?.announcementBanner.isVisible) return null
+    if (!settings?.announcementBanner.isVisible || pathname?.startsWith("/admin")) return null
 
     const Content = (
         <div className="bg-accent py-2 px-6 text-center">

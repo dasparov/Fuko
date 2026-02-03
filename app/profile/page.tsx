@@ -99,7 +99,7 @@ export default function ProfilePage() {
         setIsEditingName(false)
     }
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         if (phoneNumber.length < 10) {
             toast.error("Please enter a valid 10-digit phone number")
@@ -107,41 +107,74 @@ export default function ProfilePage() {
         }
 
         setIsVerifying(true)
-        // Simulate sending OTP
-        setTimeout(() => {
-            toast.info("OTP sent to your number: 1234")
-            setShowOtp(true)
+        try {
+            const response = await fetch("/api/auth/otp/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                toast.success("Verification code sent!")
+                setShowOtp(true)
+            } else {
+                toast.error(data.error || "Failed to send code")
+            }
+        } catch {
+            toast.error("Network error. Please try again.")
+        } finally {
             setIsVerifying(false)
-        }, 800)
+        }
     }
 
-    const handleVerifyOtp = (e: React.FormEvent) => {
+    const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault()
         if (otp.length < 4) {
             toast.error("Please enter the 4-digit code")
             return
         }
 
-        localStorage.setItem("fuko_user_phone", phoneNumber)
-        setIsLoggedIn(true)
-        setUserPhone(phoneNumber)
-        setActiveOrders(getOrders())
+        setIsVerifying(true)
+        try {
+            const response = await fetch("/api/auth/otp/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber, code: otp })
+            })
 
-        // Load or set default addresses
-        const savedAddresses = localStorage.getItem("fuko_addresses")
-        if (savedAddresses) {
-            setAddresses(JSON.parse(savedAddresses))
-        } else {
-            const defaults = [
-                { id: 1, type: "Home", line1: "1204, Palm Springs", line2: "Golf Course Road, Gurgaon", pincode: "122002" },
-                { id: 2, type: "Work", line1: "WeWork Forum", line2: "Cyber City, Phase 3, Gurgaon", pincode: "122002" }
-            ]
-            setAddresses(defaults)
-            localStorage.setItem("fuko_addresses", JSON.stringify(defaults))
+            const data = await response.json()
+
+            if (response.ok) {
+                localStorage.setItem("fuko_user_phone", phoneNumber)
+                setIsLoggedIn(true)
+                setUserPhone(phoneNumber)
+                setActiveOrders(getOrders())
+
+                // Load or set default addresses
+                const savedAddresses = localStorage.getItem("fuko_addresses")
+                if (savedAddresses) {
+                    setAddresses(JSON.parse(savedAddresses))
+                } else {
+                    const defaults = [
+                        { id: 1, type: "Home", line1: "1204, Palm Springs", line2: "Golf Course Road, Gurgaon", pincode: "122002" },
+                        { id: 2, type: "Work", line1: "WeWork Forum", line2: "Cyber City, Phase 3, Gurgaon", pincode: "122002" }
+                    ]
+                    setAddresses(defaults)
+                    localStorage.setItem("fuko_addresses", JSON.stringify(defaults))
+                }
+
+                toast.success("Identity verified! Welcome to Fuko.")
+                setShowOtp(false)
+            } else {
+                toast.error(data.error || "Invalid code")
+            }
+        } catch {
+            toast.error("Verification failed. Please try again.")
+        } finally {
+            setIsVerifying(false)
         }
-
-        toast.success("Identity verified! Welcome to Fuko.")
-        setShowOtp(false)
     }
 
     // Mock Address State moved to top

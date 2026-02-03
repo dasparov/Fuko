@@ -15,12 +15,12 @@ interface ProductCardProps {
     name: string
     price: number
     description: string
-    image: string
+    images: string[]
     tag?: { label: string, color: "accent" | "nature" }
     className?: string
 }
 
-export function ProductCard({ id, name, price, description, image, tag, className }: ProductCardProps) {
+export function ProductCard({ id, name, price, description, images, tag, className }: ProductCardProps) {
     const { addItem } = useCart()
     const [isAdding, setIsAdding] = useState(false)
 
@@ -36,7 +36,7 @@ export function ProductCard({ id, name, price, description, image, tag, classNam
             name,
             price,
             quantity: 1,
-            image
+            image: images[0] || "/placeholder.png"
         })
 
         // Reset after animation
@@ -65,14 +65,14 @@ export function ProductCard({ id, name, price, description, image, tag, classNam
                         transition={{ duration: 0.4 }}
                         className="relative h-full w-full"
                     >
-                        {image ? (
+                        {images?.[0] ? (
                             <div className="relative h-full w-full">
                                 <Image
-                                    src={image}
+                                    src={images[0]}
                                     alt={name}
                                     fill
                                     className="object-cover"
-                                    unoptimized={image.startsWith("data:")}
+                                    unoptimized={images[0].startsWith("data:")}
                                 />
                             </div>
                         ) : (

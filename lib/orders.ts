@@ -37,7 +37,7 @@ export interface Order {
 const MOCK_ORDERS: Order[] = [
     {
         id: "ORD-7652",
-        date: "Dec 12, 2024",
+        date: new Date().toISOString(),
         status: "Delivered",
         total: 1100,
         items: [

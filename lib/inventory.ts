@@ -5,7 +5,7 @@ export interface Product {
     name: string
     price: number
     description: string
-    image: string
+    images: string[]
     tag?: {
         label: string
         color: "accent" | "nature"
@@ -22,7 +22,7 @@ const INITIAL_PRODUCTS: Product[] = [
         name: "Light Soils Blend",
         price: 550,
         description: "The Foundation. 100% Whole-Leaf Virginia.",
-        image: "/light-soils-blend.png",
+        images: ["/light-soils-blend.png"],
         tag: { label: "Best Seller", color: "accent" },
         isAvailable: true,
         isHidden: false
@@ -32,7 +32,7 @@ const INITIAL_PRODUCTS: Product[] = [
         name: "Dark Soils Blend",
         price: 580,
         description: "The Night Blend. Fire-Cured Dark Leaf.",
-        image: "/dark-soils-blend.jpg",
+        images: ["/dark-soils-blend.jpg"],
         isAvailable: true,
         isHidden: false
     },
@@ -41,7 +41,7 @@ const INITIAL_PRODUCTS: Product[] = [
         name: "Turkish Blend",
         price: 600,
         description: "The Purity Archives. Certified Organic.",
-        image: "/turkish-blend.png",
+        images: ["/turkish-blend.png"],
         tag: { label: "Limited", color: "nature" },
         isAvailable: true,
         isHidden: false
@@ -55,7 +55,30 @@ export const getProducts = (): Product[] => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PRODUCTS))
         return INITIAL_PRODUCTS
     }
-    return JSON.parse(stored)
+
+    let products = JSON.parse(stored)
+
+    // Migration: image (string) -> images (string[])
+    let migrated = false
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    products = products.map((p: any) => {
+        if (p.image && !p.images) {
+            p.images = [p.image]
+            delete p.image
+            migrated = true
+        }
+        if (!p.images) {
+            p.images = []
+            migrated = true
+        }
+        return p
+    })
+
+    if (migrated) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(products))
+    }
+
+    return products
 }
 
 export const getProductById = (id: string): Product | undefined => {
