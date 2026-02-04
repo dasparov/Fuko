@@ -600,6 +600,33 @@ export default function AdminDashboard() {
                                                         ))}
                                                     </div>
                                                 </div>
+
+                                                {/* Payment Proof Viewer */}
+                                                {order.paymentScreenshot && (
+                                                    <div className="mt-6 border-t border-gray-100 pt-6">
+                                                        <details className="group">
+                                                            <summary className="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-500 group-open:text-gray-900 transition-colors select-none">
+                                                                <ImageIcon className="h-4 w-4" />
+                                                                <span>View Payment Proof</span>
+                                                                <ChevronDown className="h-3 w-3 group-open:rotate-180 transition-transform" />
+                                                            </summary>
+                                                            <div className="mt-4 p-2 bg-gray-100/50 rounded-2xl border border-gray-200/50 inline-block">
+                                                                <img
+                                                                    src={order.paymentScreenshot}
+                                                                    alt="Payment Proof"
+                                                                    className="max-h-96 rounded-xl object-contain shadow-sm"
+                                                                />
+                                                                <a
+                                                                    href={order.paymentScreenshot}
+                                                                    download={`Proof-${order.id}.png`}
+                                                                    className="mt-2 flex items-center justify-center gap-2 w-full py-2 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-700 hover:bg-gray-50 transition-colors"
+                                                                >
+                                                                    <Download className="h-3 w-3" /> Download Proof
+                                                                </a>
+                                                            </div>
+                                                        </details>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
                                     </div>
