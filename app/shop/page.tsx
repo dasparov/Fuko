@@ -4,19 +4,24 @@ import { ProductCard } from "@/components/product/ProductCard"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { getProducts, Product } from "@/lib/inventory"
+import { getProductsAction, Product } from "@/app/actions"
 
 export default function ShopPage() {
     const [products, setProducts] = useState<Product[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
     useEffect(() => {
-        // In a real app this might be an async fetch
-        setTimeout(() => {
-            const data = getProducts()
-            setProducts(data.filter(p => !p.isHidden))
-            setIsLoading(false)
-        }, 0)
+        async function load() {
+            try {
+                const data = await getProductsAction()
+                setProducts(data)
+            } catch (err) {
+                console.error("Failed to load products", err)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        load()
     }, [])
 
     return (

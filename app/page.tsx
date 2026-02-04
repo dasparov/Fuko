@@ -6,8 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SiteSettings } from "@/lib/settings";
-import { getSiteSettingsAction } from "@/app/actions";
-import { getProducts, Product } from "@/lib/inventory";
+import { getSiteSettingsAction, getProductsAction, Product } from "@/app/actions";
 import { Loader2 } from "lucide-react";
 
 export default function Home() {
@@ -19,8 +18,8 @@ export default function Home() {
     async function loadData() {
       const storedSettings = await getSiteSettingsAction();
       setSettings(storedSettings);
-      const products = getProducts();
-      setFeaturedProducts(products.filter(p => !p.isHidden).slice(0, 3));
+      const products = await getProductsAction();
+      setFeaturedProducts(products.slice(0, 3));
       setIsLoading(false);
     }
     loadData();

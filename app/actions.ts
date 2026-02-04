@@ -184,3 +184,123 @@ export async function updateUserProfileAction(phone: string, data: { name?: stri
         return false
     }
 }
+
+// --- Inventory Actions (Postgres) ---
+
+export interface Product {
+    id: string
+    name: string
+    price: number
+    description: string
+    images: string[]
+    tag?: {
+        label: string
+        color: "accent" | "nature"
+    }
+    isAvailable: boolean
+    isHidden: boolean
+}
+
+async function ensureProductsTable() {
+    await sql`
+        CREATE TABLE IF NOT EXISTS products (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            price NUMERIC NOT NULL,
+            description TEXT,
+            images JSONB DEFAULT '[]'::jsonb,
+            tag JSONB,
+            is_available BOOLEAN DEFAULT true,
+            is_hidden BOOLEAN DEFAULT false
+        )
+    `
+}
+
+export async function getProductsAction(): Promise<Product[]> {
+    try {
+        await ensureProductsTable() // Lazy init
+        const { rows } = await sql`SELECT * FROM products WHERE is_hidden = false`
+        return rows.map((row: any) => ({
+            id: row.id,
+            name: row.name,
+            price: Number(row.price),
+            description: row.description,
+            images: row.images || [],
+            tag: row.tag || undefined,
+            isAvailable: row.is_available,
+            isHidden: row.is_hidden
+        }))
+    } catch (error) {
+        console.error("Postgres Get Products Error:", error)
+        return []
+    }
+}
+
+export async function getAllProductsAdminAction(): Promise<Product[]> {
+    try {
+        await ensureProductsTable()
+        const { rows } = await sql`SELECT * FROM products`
+        return rows.map((row: any) => ({
+            id: row.id,
+            name: row.name,
+            price: Number(row.price),
+            description: row.description,
+            images: row.images || [],
+            tag: row.tag || undefined,
+            isAvailable: row.is_available,
+            isHidden: row.is_hidden
+        }))
+    } catch (error) {
+        console.error("Postgres Admin Products Error:", error)
+        return []
+    }
+}
+
+export async function saveProductAction(product: Product): Promise<boolean> {
+    try {
+        await ensureProductsTable()
+        // Upsert
+        await sql`
+            INSERT INTO products (id, name, price, description, images, tag, is_available, is_hidden)
+            VALUES (
+                ${product.id}, 
+                ${product.name}, 
+                ${product.price}, 
+                ${product.description}, 
+                ${JSON.stringify(product.images)}, 
+                ${JSON.stringify(product.tag || null)}, 
+                ${product.isAvailable}, 
+                ${product.isHidden}
+            )
+            ON CONFLICT (id) 
+            DO UPDATE SET 
+                name = EXCLUDED.name,
+                price = EXCLUDED.price,
+                description = EXCLUDED.description,
+                images = EXCLUDED.images,
+                tag = EXCLUDED.tag,
+                is_available = EXCLUDED.is_available,
+                is_hidden = EXCLUDED.is_hidden
+        `
+        revalidatePath('/')
+        revalidatePath('/shop')
+        revalidatePath('/fukoadmin')
+        return true
+    } catch (error) {
+        console.error("Postgres Save Product Error:", error)
+        return false
+    }
+}
+
+export async function deleteProductAction(id: string): Promise<boolean> {
+    try {
+        await sql`DELETE FROM products WHERE id = ${id}`
+        revalidatePath('/')
+        revalidatePath('/shop')
+        revalidatePath('/fukoadmin')
+        return true
+    } catch (error) {
+        console.error("Postgres Delete Product Error:", error)
+        return false
+    }
+}

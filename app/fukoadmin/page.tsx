@@ -2,7 +2,7 @@
 
 import { getOrdersAction, updateOrderStatusAction, deleteOrderAction, togglePaymentVerificationAction } from "@/app/actions"
 import { Order, OrderStatus } from "@/lib/orders"
-import { getProducts, saveProduct, Product } from "@/lib/inventory"
+import { getAllProductsAdminAction, saveProductAction, deleteProductAction, Product } from "@/app/actions"
 import { SiteSettings } from "@/lib/settings"
 import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
 import { useState, useEffect, useCallback } from "react"
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
             try {
                 const currentOrders = await getOrdersAction()
                 setOrders(currentOrders) // Now returns Order[] directly
-                setProducts(getProducts())
+                setProducts(await getAllProductsAdminAction())
 
                 const currentSettings = await getSiteSettingsAction()
                 setSettings(currentSettings)
@@ -306,7 +306,7 @@ export default function AdminDashboard() {
 
 
     // --- Inventory Actions ---
-    const handleSaveProduct = () => {
+    const handleSaveProduct = async () => {
         if (!tempProduct.name || !tempProduct.price) {
             toast.error("Name and Price are required")
             return
@@ -321,18 +321,29 @@ export default function AdminDashboard() {
             isHidden: tempProduct.isHidden ?? false,
             tag: tempProduct.tag
         }
-        if (saveProduct(productToSave)) {
-            setProducts(getProducts())
+        if (await saveProductAction(productToSave)) {
+            setProducts(await getAllProductsAdminAction())
             setIsEditingProduct(null)
             toast.success("Product saved to archives")
         }
     }
 
-    const handleToggleVisibility = (product: Product) => {
+    const handleToggleVisibility = async (product: Product) => {
         const updated = { ...product, isHidden: !product.isHidden }
-        if (saveProduct(updated)) {
-            setProducts(getProducts())
+        if (await saveProductAction(updated)) {
+            setProducts(await getAllProductsAdminAction())
             toast.info(`Product ${product.name} is now ${updated.isHidden ? 'hidden' : 'visible'}`)
+        }
+    }
+
+    const handleDeleteProduct = async (id: string) => {
+        if (confirm("Are you sure you want to delete this product forever?")) {
+            if (await deleteProductAction(id)) {
+                setProducts(await getAllProductsAdminAction())
+                toast.success("Product deleted")
+            } else {
+                toast.error("Failed to delete product")
+            }
         }
     }
 
@@ -875,6 +886,12 @@ export default function AdminDashboard() {
                                             >
                                                 {product.isHidden ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                             </button>
+                                            <button
+                                                onClick={() => handleDeleteProduct(product.id)}
+                                                className="p-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                                            >
+                                                <Trash2 className="h-5 w-5" />
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -1322,20 +1339,7 @@ export default function AdminDashboard() {
                             </button>
 
                             {/* Danger Zone */}
-                            <div className="mt-12 pt-8 border-t border-gray-100">
-                                <h3 className="text-xs font-black text-red-400 uppercase tracking-widest mb-4">Danger Zone</h3>
-                                <button
-                                    onClick={() => {
-                                        if (confirm("This will wipe all current orders and reset to demo data. Are you sure?")) {
-                                            localStorage.removeItem("fuko_orders")
-                                            window.location.reload()
-                                        }
-                                    }}
-                                    className="px-6 py-3 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors"
-                                >
-                                    Reset to Demo Data
-                                </button>
-                            </div>
+                            {/* Danger Zone Removed (Legacy LocalStorage Reset) */}
                         </div>
                     </div>
                 )}
