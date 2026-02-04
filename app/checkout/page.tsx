@@ -53,12 +53,17 @@ export default function CheckoutPage() {
 
             if (savedPhone) {
                 setPhoneNumber(savedPhone)
-                setStep("address")
 
-                // Load addresses only if logged in
-                const savedAddresses = localStorage.getItem("fuko_addresses")
-                if (savedAddresses) {
-                    setAddresses(JSON.parse(savedAddresses))
+                const savedName = localStorage.getItem("fuko_user_name")
+                if (savedName) {
+                    setStep("address")
+                    // Load addresses only if logged in
+                    const savedAddresses = localStorage.getItem("fuko_addresses")
+                    if (savedAddresses) {
+                        setAddresses(JSON.parse(savedAddresses))
+                    }
+                } else {
+                    setStep("onboarding")
                 }
             }
         }, 0)
@@ -315,7 +320,11 @@ export default function CheckoutPage() {
                 state,
                 pincode
             }
-            const updatedAddresses = [firstAddress]
+            // Save Address - Merge with existing to prevent data loss
+            const existingAddressesStr = localStorage.getItem("fuko_addresses")
+            const existingAddresses = existingAddressesStr ? JSON.parse(existingAddressesStr) : []
+            const updatedAddresses = [...existingAddresses, firstAddress]
+
             setAddresses(updatedAddresses)
             localStorage.setItem("fuko_addresses", JSON.stringify(updatedAddresses))
             setSelectedAddress(firstAddress)

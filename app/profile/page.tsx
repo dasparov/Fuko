@@ -202,7 +202,7 @@ export default function ProfilePage() {
     const handleLogout = () => {
         // Clear user session data
         localStorage.removeItem("fuko_user_phone")
-        localStorage.removeItem("fuko_user_name")
+        // localStorage.removeItem("fuko_user_name") // Keep name for demo persistence
         // Note: We keep fuko_addresses and fuko_orders for now 
         // as this is a mock app and we don't have a backend to restore them.
         // But we clear the "logged in" state.
