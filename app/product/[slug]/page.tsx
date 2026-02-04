@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
-import { getProductById, getProducts, Product } from "@/lib/inventory";
+import { getProductsAction, Product } from "@/app/actions";
 
 export default function ProductPage() {
     const params = useParams();
@@ -21,19 +21,28 @@ export default function ProductPage() {
     const [activeImage, setActiveImage] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
 
+    const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
     useEffect(() => {
         // Simulate fetch delay for premium feel
-        setTimeout(() => {
-            const found = getProductById(slug);
-            if (!found) {
-                // If not found, maybe redirect to shop or show simplified valid product
-                // For now, redirect to shop
-                router.push("/shop");
-                return;
+        async function load() {
+            try {
+                const allProducts = await getProductsAction();
+                const found = allProducts.find(p => p.id === slug);
+
+                if (!found) {
+                    router.push("/shop");
+                    return;
+                }
+                setProduct(found);
+                setRelatedProducts(allProducts.filter(p => !p.isHidden && p.id !== found.id));
+            } catch (error) {
+                console.error("Failed to load product", error);
+            } finally {
+                setIsLoading(false);
             }
-            setProduct(found);
-            setIsLoading(false);
-        }, 300);
+        }
+        load();
     }, [slug, router]);
 
     if (isLoading || !product) {
@@ -156,24 +165,23 @@ export default function ProductPage() {
                         <Link href="/shop" className="text-xs font-bold text-muted underline">View All</Link>
                     </div>
                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-6 px-6">
-                        {getProducts()
-                            .filter((p: Product) => !p.isHidden && p.id !== product.id)
-                            .map((p: Product) => (
-                                <Link key={p.id} href={`/product/${p.id}`} className="shrink-0 w-48 group">
-                                    <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-paper mb-3">
-                                        <Image
-                                            src={p.images[0] || "/placeholder.png"}
-                                            alt={p.name}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                        />
-                                    </div>
-                                    <p className="font-bold text-sm line-clamp-1">{p.name}</p>
-                                    <p className="text-xs text-muted">₹{p.price}</p>
-                                </Link>
-                            ))}
+                        {relatedProducts.map((p: Product) => (
+                            <Link key={p.id} href={`/product/${p.id}`} className="shrink-0 w-48 group">
+                                <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-paper mb-3">
+                                    <Image
+                                        src={p.images[0] || "/placeholder.png"}
+                                        alt={p.name}
+                                        fill
+                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                </div>
+                                <p className="font-bold text-sm line-clamp-1">{p.name}</p>
+                                <p className="text-xs text-muted">₹{p.price}</p>
+                            </Link>
+                        ))}
                     </div>
                 </div>
+
             </div>
 
             {/* Sticky Bottom Bar */}

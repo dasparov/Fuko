@@ -17,7 +17,7 @@ export function AnnouncementBanner() {
         }, 0)
     }, [])
 
-    if (!settings?.announcementBanner.isVisible || pathname?.startsWith("/admin")) return null
+    if (!settings?.announcementBanner.isVisible || pathname?.startsWith("/admin") || pathname?.startsWith("/fukoadmin")) return null
 
     const Content = (
         <div className="bg-accent py-2 px-6 text-center">
