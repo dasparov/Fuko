@@ -44,7 +44,7 @@ export default function Home() {
               {settings?.heroText.title || "Know Smoking."}
             </h1>
             <p className="mt-4 max-w-md font-body text-lg opacity-95 drop-shadow-md font-medium">
-              {settings?.heroText.subtitle || "100% Additive-free tobacco. No expanded filler. Just the raw, unadulterated plant."}
+              {settings?.heroText.subtitle || "Premium Indian Tobacco defined by its soil. Experience true terroir character."}
             </p>
           </div>
 
