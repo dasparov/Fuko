@@ -12,7 +12,15 @@ const SETTINGS_KEY = 'site_settings'
 export async function getSiteSettingsAction(): Promise<SiteSettings> {
     try {
         const settings = await kv.get<SiteSettings>(SETTINGS_KEY)
-        return settings || DEFAULT_SETTINGS
+        // Deep merge with defaults to ensure all fields exist (even if KV has partial data)
+        if (!settings) return DEFAULT_SETTINGS
+
+        return {
+            ...DEFAULT_SETTINGS,
+            ...settings,
+            announcementBanner: { ...DEFAULT_SETTINGS.announcementBanner, ...(settings.announcementBanner || {}) },
+            heroText: { ...DEFAULT_SETTINGS.heroText, ...(settings.heroText || {}) }
+        }
     } catch (error) {
         console.error("KV Read Error:", error)
         return DEFAULT_SETTINGS
