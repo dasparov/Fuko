@@ -25,20 +25,70 @@ export default function LoginPage() {
         }
     }, [step])
 
-    const handleSendOtp = (e: React.FormEvent) => {
+    const [isVerifying, setIsVerifying] = useState(false)
+
+    const handleSendOtp = async (e: React.FormEvent) => {
         e.preventDefault()
-        setStep("otp")
+        if (phoneNumber.length < 10) {
+            toast.error("Please enter a valid 10-digit phone number")
+            return
+        }
+
+        setIsVerifying(true)
+        try {
+            const response = await fetch("/api/auth/otp/send", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                toast.success("Verification code sent!")
+                setStep("otp")
+            } else {
+                toast.error(data.error || "Failed to send code")
+            }
+        } catch {
+            toast.error("Network error. Please try again.")
+        } finally {
+            setIsVerifying(false)
+        }
     }
 
-    const handleVerify = (e: React.FormEvent) => {
+    const handleVerify = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (phoneNumber.length === 10) {
-            localStorage.setItem("fuko_user_phone", phoneNumber)
-            toast.success("Welcome back!")
-            router.push("/profile")
-        } else {
-            toast.error("Please enter a valid phone number first")
-            setStep("phone")
+        const code = otp.join("")
+        if (code.length < 4) {
+            toast.error("Please enter the 4-digit code")
+            return
+        }
+
+        setIsVerifying(true)
+        try {
+            const response = await fetch("/api/auth/otp/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ phoneNumber, code })
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                localStorage.setItem("fuko_user_phone", phoneNumber)
+                toast.success("Welcome back!")
+                router.push("/profile")
+            } else {
+                toast.error(data.error || "Invalid code")
+                // Clear OTP on error
+                setOtp(["", "", "", ""])
+                inputRefs.current[0]?.focus()
+            }
+        } catch {
+            toast.error("Verification failed. Please try again.")
+        } finally {
+            setIsVerifying(false)
         }
     }
 
@@ -105,10 +155,11 @@ export default function LoginPage() {
                                 onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
                                 className="w-full rounded-2xl border-none bg-paper px-6 py-4 text-lg font-medium outline-none ring-2 ring-transparent transition-all focus:ring-primary/20"
                                 autoFocus
+                                disabled={isVerifying}
                             />
                         </div>
-                        <Button size="pill" className="w-full py-6 text-lg">
-                            Get OTP
+                        <Button size="pill" className="w-full py-6 text-lg" disabled={isVerifying || phoneNumber.length < 10}>
+                            {isVerifying ? "Sending OTP..." : "Get OTP"}
                         </Button>
                     </form>
                 ) : (
@@ -128,17 +179,19 @@ export default function LoginPage() {
                                         onKeyDown={(e) => handleKeyDown(index, e)}
                                         onPaste={handlePaste}
                                         className="h-16 w-16 rounded-2xl border-none bg-paper text-center text-2xl font-bold outline-none ring-2 ring-transparent focus:ring-primary/20 transition-all caret-primary"
+                                        disabled={isVerifying}
                                     />
                                 ))}
                             </div>
                         </div>
-                        <Button size="pill" className="w-full py-6 text-lg">
-                            Verify & Login
+                        <Button size="pill" className="w-full py-6 text-lg" disabled={isVerifying || otp.join("").length < 4}>
+                            {isVerifying ? "Verifying..." : "Verify & Login"}
                         </Button>
                         <button
                             type="button"
                             onClick={() => setStep("phone")}
                             className="w-full text-sm font-bold text-muted"
+                            disabled={isVerifying}
                         >
                             Wrong number?
                         </button>

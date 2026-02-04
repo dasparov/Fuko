@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import Image from "next/image"
-import { getOrders, Order } from "@/lib/orders"
+import { Order } from "@/lib/orders"
+import { getOrdersForUserAction } from "@/app/actions"
 
 export default function ProfilePage() {
     const { addItem } = useCart()
@@ -44,7 +45,7 @@ export default function ProfilePage() {
     const [newAddress, setNewAddress] = useState({ type: "Home", line1: "", line2: "", pincode: "" })
 
     useEffect(() => {
-        setTimeout(() => {
+        setTimeout(async () => {
             // Check for saved phone in localStorage
             const savedPhone = localStorage.getItem("fuko_user_phone")
             const savedName = localStorage.getItem("fuko_user_name")
@@ -55,7 +56,8 @@ export default function ProfilePage() {
                 if (savedName) setUserName(savedName)
 
                 // Logged in users get their data
-                setActiveOrders(getOrders())
+                const userOrders = await getOrdersForUserAction(savedPhone)
+                setActiveOrders(userOrders)
 
                 const savedAddresses = localStorage.getItem("fuko_addresses")
                 if (savedAddresses) {
@@ -134,7 +136,9 @@ export default function ProfilePage() {
                 localStorage.setItem("fuko_user_phone", phoneNumber)
                 setIsLoggedIn(true)
                 setUserPhone(phoneNumber)
-                setActiveOrders(getOrders())
+
+                const userOrders = await getOrdersForUserAction(phoneNumber)
+                setActiveOrders(userOrders)
 
                 // Load or set default addresses
                 const savedAddresses = localStorage.getItem("fuko_addresses")

@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/Button"
 import { useCart } from "@/context/CartContext"
-import { saveOrder } from "@/lib/orders"
+import { saveOrderAction } from "@/app/actions"
+import { Order, OrderStatus } from "@/lib/orders"
 import { ArrowLeft, Check, MapPin, CreditCard, ChevronRight, Phone, User, Image as ImageIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -48,7 +49,7 @@ export default function CheckoutPage() {
 
     useEffect(() => {
         setTimeout(() => {
-            // Check if user is logged in (has saved phone number)
+            // Check for saved phone in localStorage
             const savedPhone = localStorage.getItem("fuko_user_phone")
 
             if (savedPhone) {
@@ -519,14 +520,17 @@ export default function CheckoutPage() {
             const userName = localStorage.getItem("fuko_user_name") || "Customer"
 
             // Simulate verification delay
-            setTimeout(() => {
-                // Save order with delivery address
-                const newOrder = saveOrder(
-                    items,
-                    cartTotal,
-                    userName,
-                    "9876543210", // TODO: Get from user profile
-                    selectedAddress ? {
+            setTimeout(async () => {
+                // Construct Order Object
+                const newOrder: Order = {
+                    id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+                    date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
+                    status: "Processing" as OrderStatus,
+                    items: items,
+                    total: cartTotal,
+                    customerName: userName,
+                    customerPhone: phoneNumber || "9876543210", // Use state phoneNumber
+                    deliveryAddress: selectedAddress ? {
                         type: selectedAddress.type,
                         line1: selectedAddress.line1,
                         line2: selectedAddress.line2,
@@ -534,24 +538,21 @@ export default function CheckoutPage() {
                         state: selectedAddress.state,
                         pincode: selectedAddress.pincode
                     } : undefined,
-                    paymentScreenshot || undefined
-                )
-
-
-                // Add verification metadata
-                const orders = JSON.parse(localStorage.getItem("fuko_orders") || "[]")
-                if (orders.length > 0) {
-                    orders[0].isPaymentVerified = false
-                    localStorage.setItem("fuko_orders", JSON.stringify(orders))
+                    paymentScreenshot: paymentScreenshot || undefined
                 }
 
-                setOrderId(newOrder.id)
+                // Save to Postgres
+                const success = await saveOrderAction(newOrder)
 
-                // Clear cart
-                clearCart()
+                // Add verification metadata locally for immediate feedback (optional, but good for UI state)
+                if (success) {
+                    setOrderId(newOrder.id)
+                    clearCart()
+                    setStep("confirmation")
+                } else {
+                    toast.error("Failed to place order. Please try again.")
+                }
 
-                // Move to confirmation
-                setStep("confirmation")
                 setIsProcessing(false)
             }, 1500)
         }

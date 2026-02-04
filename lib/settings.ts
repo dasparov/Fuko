@@ -16,7 +16,7 @@ export interface SiteSettings {
 
 const STORAGE_KEY = "fuko_settings_v3"
 
-const DEFAULT_SETTINGS: SiteSettings = {
+export const DEFAULT_SETTINGS: SiteSettings = {
     announcementBanner: {
         text: "Experience the Archives: Free shipping on orders over ₹1500",
         isVisible: true,

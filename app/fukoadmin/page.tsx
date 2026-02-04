@@ -1,8 +1,10 @@
 "use client"
 
-import { getOrders, updateOrderStatus, deleteOrder, Order, OrderStatus, togglePaymentVerification } from "@/lib/orders"
+import { getOrdersAction, updateOrderStatusAction, deleteOrderAction, togglePaymentVerificationAction } from "@/app/actions"
+import { Order, OrderStatus } from "@/lib/orders"
 import { getProducts, saveProduct, Product } from "@/lib/inventory"
-import { getSiteSettings, saveSiteSettings, SiteSettings } from "@/lib/settings"
+import { SiteSettings } from "@/lib/settings"
+import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import {
@@ -216,12 +218,14 @@ export default function AdminDashboard() {
     const loadAllData = () => {
         setIsRefreshing(true)
         // Simulate network delay for better UX
-        setTimeout(() => {
+        setTimeout(async () => {
             try {
-                const currentOrders = getOrders()
-                setOrders(currentOrders)
+                const currentOrders = await getOrdersAction()
+                setOrders(currentOrders) // Now returns Order[] directly
                 setProducts(getProducts())
-                setSettings(getSiteSettings())
+
+                const currentSettings = await getSiteSettingsAction()
+                setSettings(currentSettings)
 
                 // Calculate Analytics
                 calculateAnalytics(currentOrders)
@@ -266,24 +270,27 @@ export default function AdminDashboard() {
     // Block render if not authenticated
 
     // --- Order Actions ---
-    const handleStatusChange = (orderId: string, newStatus: OrderStatus) => {
-        if (updateOrderStatus(orderId, newStatus)) {
-            setOrders(getOrders())
+    const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+        if (await updateOrderStatusAction(orderId, newStatus)) {
+            const updatedOrders = await getOrdersAction()
+            setOrders(updatedOrders)
             toast.success(`Order ${orderId} updated to ${newStatus}`)
         }
     }
 
-    const handleVerifyPayment = (orderId: string, status: boolean) => {
-        if (togglePaymentVerification(orderId, status)) {
-            setOrders(getOrders())
+    const handleVerifyPayment = async (orderId: string, status: boolean) => {
+        if (await togglePaymentVerificationAction(orderId, status)) {
+            const updatedOrders = await getOrdersAction()
+            setOrders(updatedOrders)
             toast.success(status ? "Payment Verified" : "Payment marked as Unverified")
         }
     }
 
-    const handleDeleteOrder = (orderId: string) => {
+    const handleDeleteOrder = async (orderId: string) => {
         if (confirm("Are you sure you want to delete this order? This cannot be undone.")) {
-            if (deleteOrder(orderId)) {
-                setOrders(getOrders()) // Refresh list
+            if (await deleteOrderAction(orderId)) {
+                const updatedOrders = await getOrdersAction()
+                setOrders(updatedOrders) // Refresh list
                 setExpandedOrderId(null) // Close expanded view if it was this order
                 toast.success("Order deleted successfully")
             } else {
@@ -332,13 +339,14 @@ export default function AdminDashboard() {
     // --- Settings Actions ---
 
     // --- Settings Actions ---
-    const handleSaveSettings = () => {
+    const handleSaveSettings = async () => {
         setIsSaving(true)
-        if (settings && saveSiteSettings(settings)) {
-            setTimeout(() => {
-                setIsSaving(false)
-                toast.success("Site settings updated live")
-            }, 800)
+        if (settings && await saveSiteSettingsAction(settings)) {
+            toast.success("Site settings updated live")
+            setIsSaving(false)
+        } else {
+            toast.error("Failed to save settings")
+            setIsSaving(false)
         }
     }
 

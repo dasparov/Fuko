@@ -5,7 +5,8 @@ import { ProductCard } from "@/components/product/ProductCard";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getSiteSettings, SiteSettings } from "@/lib/settings";
+import { SiteSettings } from "@/lib/settings";
+import { getSiteSettingsAction } from "@/app/actions";
 import { getProducts, Product } from "@/lib/inventory";
 import { Loader2 } from "lucide-react";
 
@@ -15,13 +16,14 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setTimeout(() => {
-      setSettings(getSiteSettings());
+    async function loadData() {
+      const storedSettings = await getSiteSettingsAction();
+      setSettings(storedSettings);
       const products = getProducts();
-      // For now, let's say "Best Seller" or "Limited" are featured
       setFeaturedProducts(products.filter(p => !p.isHidden).slice(0, 3));
       setIsLoading(false);
-    }, 0)
+    }
+    loadData();
   }, []);
 
   return (
