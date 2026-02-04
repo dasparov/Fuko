@@ -2,12 +2,12 @@
 
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/product/ProductCard";
+import { ProductSkeleton } from "@/components/product/ProductSkeleton";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SiteSettings } from "@/lib/settings";
 import { getSiteSettingsAction, getProductsAction, Product } from "@/app/actions";
-import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -83,10 +83,9 @@ export default function Home() {
         {/* Scroll Container */}
         <div className="flex gap-4 overflow-x-auto pb-8 pr-6 scrollbar-hide">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20 w-full text-muted">
-              <Loader2 className="h-6 w-6 animate-spin mb-2" />
-              <p className="font-bold text-[10px] uppercase tracking-widest">Opening Archives...</p>
-            </div>
+            Array.from({ length: 3 }).map((_, i) => (
+              <ProductSkeleton key={i} className="w-[280px]" />
+            ))
           ) : featuredProducts.length === 0 ? (
             <div className="py-10 text-muted italic">No blends currently available.</div>
           ) : (

@@ -1,7 +1,8 @@
 "use client"
 
 import { ProductCard } from "@/components/product/ProductCard"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ProductSkeleton } from "@/components/product/ProductSkeleton"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getProductsAction, Product } from "@/app/actions"
@@ -40,10 +41,10 @@ export default function ShopPage() {
             {/* Product Grid */}
             <div className="grid grid-cols-1 gap-8 px-6 sm:grid-cols-2 lg:grid-cols-3">
                 {isLoading ? (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-muted">
-                        <Loader2 className="h-8 w-8 animate-spin mb-4" />
-                        <p className="font-bold text-xs uppercase tracking-widest">Opening Archives...</p>
-                    </div>
+                    // Show 6 skeleton cards
+                    Array.from({ length: 6 }).map((_, i) => (
+                        <ProductSkeleton key={i} />
+                    ))
                 ) : products.length === 0 ? (
                     <div className="col-span-full text-center py-20 text-muted">
                         <p className="font-bold text-xs uppercase tracking-widest">The Archives are currently closed.</p>

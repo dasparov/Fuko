@@ -1,7 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Check, Minus, Plus, Share2, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, Minus, Plus, Share2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -47,10 +48,43 @@ export default function ProductPage() {
 
     if (isLoading || !product) {
         return (
-            <main className="min-h-screen flex items-center justify-center bg-background">
-                <div className="flex flex-col items-center gap-4 text-muted">
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                    <p className="font-heading font-bold text-xs uppercase tracking-widest">Loading Archives...</p>
+            <main className="min-h-screen bg-background pb-32">
+                {/* Header */}
+                <div className="fixed top-0 z-40 flex w-full items-center justify-between p-6">
+                    <Link href="/" className="rounded-full bg-white/50 p-2 backdrop-blur-md">
+                        <ArrowLeft className="h-6 w-6" />
+                    </Link>
+                </div>
+
+                {/* Image Gallery Skeleton */}
+                <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper">
+                    <Skeleton className="h-full w-full" />
+                </div>
+
+                {/* Product Details Skeleton */}
+                <div className="px-6 pt-8">
+                    <div className="flex items-start justify-between mb-8">
+                        <div className="w-2/3 space-y-2">
+                            <Skeleton className="h-8 w-3/4 rounded-md bg-muted/30" />
+                            <div className="flex gap-2">
+                                <Skeleton className="h-6 w-16 rounded-full bg-muted/20" />
+                                <Skeleton className="h-6 w-16 rounded-full bg-muted/20" />
+                            </div>
+                        </div>
+                        <div className="w-1/3 flex flex-col items-end gap-1">
+                            <Skeleton className="h-8 w-20 rounded-md bg-muted/30" />
+                            <Skeleton className="h-4 w-12 rounded-sm bg-muted/20" />
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <Skeleton className="h-6 w-32 rounded-md bg-muted/30" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-full rounded-sm bg-muted/20" />
+                            <Skeleton className="h-4 w-full rounded-sm bg-muted/20" />
+                            <Skeleton className="h-4 w-2/3 rounded-sm bg-muted/20" />
+                        </div>
+                    </div>
                 </div>
             </main>
         );
