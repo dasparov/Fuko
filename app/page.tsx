@@ -17,16 +17,25 @@ export default function Home() {
 
   useEffect(() => {
     async function loadData() {
-      try {
-        const storedSettings = await getSiteSettingsAction();
-        setSettings(storedSettings);
-        const products = await getProductsAction();
-        setFeaturedProducts(products.slice(0, 3));
-      } catch (error) {
-        console.error("Failed to load homepage data", error);
-      } finally {
-        setIsLoading(false);
+      // Load both resources in parallel; if one fails, the other can still succeed.
+      const [settingsResult, productsResult] = await Promise.allSettled([
+        getSiteSettingsAction(),
+        getProductsAction()
+      ]);
+
+      if (settingsResult.status === "fulfilled") {
+        setSettings(settingsResult.value);
+      } else {
+        console.error("Failed to load settings", settingsResult.reason);
       }
+
+      if (productsResult.status === "fulfilled") {
+        setFeaturedProducts(productsResult.value.slice(0, 3));
+      } else {
+        console.error("Failed to load products", productsResult.reason);
+      }
+
+      setIsLoading(false);
     }
     loadData();
   }, []);
