@@ -13,6 +13,7 @@ export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isHeroLoaded, setIsHeroLoaded] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -28,13 +29,15 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[90vh] w-full overflow-hidden">
+      <section className="relative h-[90vh] w-full overflow-hidden bg-gray-900">
         <Image
           src={settings?.heroImage || "/hero-bg-v2.jpg"}
           alt="Fuko Tobacco Blend"
           fill
-          className="object-cover brightness-75"
+          className={`object-cover brightness-75 transition-all duration-1000 ease-out ${isHeroLoaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-xl scale-105"
+            }`}
           priority
+          onLoad={() => setIsHeroLoaded(true)}
         />
         <div className="absolute inset-0 flex flex-col items-center justify-between pb-12 pt-12 p-6 text-center text-white">
           <div>
