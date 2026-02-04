@@ -374,9 +374,15 @@ export default function AdminDashboard() {
             } else {
                 toast.error("Failed to save settings")
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Save Settings Error:", error)
-            toast.error("Error saving. Please refresh the page.")
+            // Handle stale client (deployment mismatch)
+            if (error?.message?.includes("UnrecognizedActionError") || error?.message?.includes("not found")) {
+                toast.error("New update available. Refreshing...")
+                setTimeout(() => window.location.reload(), 1500)
+            } else {
+                toast.error("Error saving settings")
+            }
         } finally {
             setIsSaving(false)
         }
