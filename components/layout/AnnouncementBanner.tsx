@@ -21,7 +21,7 @@ export function AnnouncementBanner() {
             }
         }
         load()
-    }, [])
+    }, [pathname])
 
     if (!settings?.announcementBanner.isVisible || pathname?.startsWith("/admin") || pathname?.startsWith("/fukoadmin")) return null
 
