@@ -368,11 +368,16 @@ export default function AdminDashboard() {
     // --- Settings Actions ---
     const handleSaveSettings = async () => {
         setIsSaving(true)
-        if (settings && await saveSiteSettingsAction(settings)) {
-            toast.success("Site settings updated live")
-            setIsSaving(false)
-        } else {
-            toast.error("Failed to save settings")
+        try {
+            if (settings && await saveSiteSettingsAction(settings)) {
+                toast.success("Site settings updated live")
+            } else {
+                toast.error("Failed to save settings")
+            }
+        } catch (error) {
+            console.error("Save Settings Error:", error)
+            toast.error("Error saving. Please refresh the page.")
+        } finally {
             setIsSaving(false)
         }
     }
