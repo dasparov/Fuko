@@ -75,10 +75,7 @@ export default function ProfilePage() {
                     setAddresses(JSON.parse(savedAddresses))
                 } else {
                     // If logged in but no addresses, set defaults
-                    const defaults = [
-                        { id: 1, type: "Home", line1: "1204, Palm Springs", line2: "Golf Course Road, Gurgaon", pincode: "122002" },
-                        { id: 2, type: "Work", line1: "WeWork Forum", line2: "Cyber City, Phase 3, Gurgaon", pincode: "122002" }
-                    ]
+                    const defaults: Address[] = []
                     setAddresses(defaults)
                     localStorage.setItem("fuko_addresses", JSON.stringify(defaults))
                 }
@@ -157,10 +154,7 @@ export default function ProfilePage() {
                 if (savedAddresses) {
                     setAddresses(JSON.parse(savedAddresses))
                 } else {
-                    const defaults = [
-                        { id: 1, type: "Home", line1: "1204, Palm Springs", line2: "Golf Course Road, Gurgaon", pincode: "122002" },
-                        { id: 2, type: "Work", line1: "WeWork Forum", line2: "Cyber City, Phase 3, Gurgaon", pincode: "122002" }
-                    ]
+                    const defaults: Address[] = []
                     setAddresses(defaults)
                     localStorage.setItem("fuko_addresses", JSON.stringify(defaults))
                 }

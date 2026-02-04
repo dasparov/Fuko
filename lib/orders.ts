@@ -1,6 +1,6 @@
 "use client"
 
-export type OrderStatus = "Processing" | "Shipped" | "Out for Delivery" | "Delivered"
+export type OrderStatus = "Processing" | "Shipped" | "Out for Delivery" | "Delivered" | "Cancelled"
 
 export interface OrderItem {
     id: string
@@ -34,34 +34,14 @@ export interface Order {
     isPaymentVerified?: boolean
 }
 
-const MOCK_ORDERS: Order[] = [
-    {
-        id: "ORD-7652",
-        date: new Date().toISOString(),
-        status: "Delivered",
-        total: 1100,
-        items: [
-            {
-                id: "light-soils-blend",
-                name: "Light Soils Blend",
-                price: 550,
-                quantity: 2,
-                image: "/light-soils-blend.png"
-            }
-        ]
-    }
-]
-
 const STORAGE_KEY = "fuko_orders"
 
 export function getOrders(): Order[] {
-    if (typeof window === "undefined") return MOCK_ORDERS
+    if (typeof window === "undefined") return []
 
     const stored = localStorage.getItem(STORAGE_KEY)
     if (!stored) {
-        // Initialize with one mock order for demo purposes if empty
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(MOCK_ORDERS))
-        return MOCK_ORDERS
+        return []
     }
 
     return JSON.parse(stored)

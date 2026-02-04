@@ -1,6 +1,6 @@
 "use client"
 
-import { getOrders, updateOrderStatus, Order, OrderStatus, togglePaymentVerification } from "@/lib/orders"
+import { getOrders, updateOrderStatus, deleteOrder, Order, OrderStatus, togglePaymentVerification } from "@/lib/orders"
 import { getProducts, saveProduct, Product } from "@/lib/inventory"
 import { getSiteSettings, saveSiteSettings, SiteSettings } from "@/lib/settings"
 import { useState, useEffect, useCallback } from "react"
@@ -12,13 +12,14 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-const STATUS_OPTIONS: OrderStatus[] = ["Processing", "Shipped", "Out for Delivery", "Delivered"]
+const STATUS_OPTIONS: OrderStatus[] = ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"]
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
     "Processing": "bg-amber-100 text-amber-700",
     "Shipped": "bg-blue-100 text-blue-700",
     "Out for Delivery": "bg-purple-100 text-purple-700",
-    "Delivered": "bg-green-100 text-green-700"
+    "Delivered": "bg-green-100 text-green-700",
+    "Cancelled": "bg-red-100 text-red-700"
 }
 
 type AdminTab = "orders" | "inventory" | "analytics" | "settings"
@@ -276,6 +277,18 @@ export default function AdminDashboard() {
         if (togglePaymentVerification(orderId, status)) {
             setOrders(getOrders())
             toast.success(status ? "Payment Verified" : "Payment marked as Unverified")
+        }
+    }
+
+    const handleDeleteOrder = (orderId: string) => {
+        if (confirm("Are you sure you want to delete this order? This cannot be undone.")) {
+            if (deleteOrder(orderId)) {
+                setOrders(getOrders()) // Refresh list
+                setExpandedOrderId(null) // Close expanded view if it was this order
+                toast.success("Order deleted successfully")
+            } else {
+                toast.error("Failed to delete order")
+            }
         }
     }
 
@@ -539,6 +552,15 @@ export default function AdminDashboard() {
                                                         </div>
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                handleDeleteOrder(order.id)
+                                                            }}
+                                                            className="w-full sm:w-auto px-4 py-2.5 bg-red-50 text-red-600 rounded-xl text-xs font-bold hover:bg-red-100 active:scale-95 transition-all"
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </button>
                                                         {!order.isPaymentVerified && (
                                                             <button
                                                                 onClick={(e) => {
