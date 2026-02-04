@@ -8,8 +8,9 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import Image from "next/image"
-import { Order } from "@/lib/orders"
-import { getOrdersForUserAction } from "@/app/actions"
+import { Order, DeliveryAddress } from "@/lib/orders"
+import { getOrdersForUserAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
+import { INDIAN_STATES } from "@/lib/constants"
 
 export default function ProfilePage() {
     const { addItem } = useCart()
@@ -32,17 +33,14 @@ export default function ProfilePage() {
     const [activeOrders, setActiveOrders] = useState<Order[]>([])
 
     // Address State
-    interface Address {
+    // Address State
+    interface Address extends DeliveryAddress {
         id: number
-        type: string
-        line1: string
-        line2: string
-        pincode: string
     }
     const [isAddingAddress, setIsAddingAddress] = useState(false)
     const [editingId, setEditingId] = useState<number | null>(null)
     const [addresses, setAddresses] = useState<Address[]>([])
-    const [newAddress, setNewAddress] = useState({ type: "Home", line1: "", line2: "", pincode: "" })
+    const [newAddress, setNewAddress] = useState<Address>({ id: 0, type: "Home", line1: "", line2: "", city: "", state: "", pincode: "" })
 
     useEffect(() => {
         setTimeout(async () => {
@@ -59,14 +57,13 @@ export default function ProfilePage() {
                 const userOrders = await getOrdersForUserAction(savedPhone)
                 setActiveOrders(userOrders)
 
-                const savedAddresses = localStorage.getItem("fuko_addresses")
-                if (savedAddresses) {
-                    setAddresses(JSON.parse(savedAddresses))
-                } else {
-                    // If logged in but no addresses, set defaults
-                    const defaults: Address[] = []
-                    setAddresses(defaults)
-                    localStorage.setItem("fuko_addresses", JSON.stringify(defaults))
+                // Fetch User Profile from Postgres
+                const profile = await getUserProfileAction(savedPhone)
+                if (profile) {
+                    if (profile.name) setUserName(profile.name)
+                    // Map addresses to include simple ID for UI handling
+                    const dbAddresses = profile.addresses.map((addr, idx) => ({ ...addr, id: idx + 1 }))
+                    setAddresses(dbAddresses)
                 }
             }
         }, 0)
@@ -77,10 +74,14 @@ export default function ProfilePage() {
         setIsEditingName(true)
     }
 
-    const handleSaveName = () => {
+    const handleSaveName = async () => {
         if (tempName.trim()) {
             setUserName(tempName)
             localStorage.setItem("fuko_user_name", tempName)
+            // Persist to DB
+            if (userPhone) {
+                await updateUserProfileAction(userPhone, { name: tempName })
+            }
         }
         setIsEditingName(false)
     }
@@ -140,14 +141,12 @@ export default function ProfilePage() {
                 const userOrders = await getOrdersForUserAction(phoneNumber)
                 setActiveOrders(userOrders)
 
-                // Load or set default addresses
-                const savedAddresses = localStorage.getItem("fuko_addresses")
-                if (savedAddresses) {
-                    setAddresses(JSON.parse(savedAddresses))
-                } else {
-                    const defaults: Address[] = []
-                    setAddresses(defaults)
-                    localStorage.setItem("fuko_addresses", JSON.stringify(defaults))
+                // Load Profile
+                const profile = await getUserProfileAction(phoneNumber)
+                if (profile) {
+                    if (profile.name) setUserName(profile.name)
+                    const dbAddresses = profile.addresses.map((addr, idx) => ({ ...addr, id: idx + 1 }))
+                    setAddresses(dbAddresses)
                 }
 
                 toast.success("Identity verified! Welcome to Fuko.")
@@ -178,19 +177,27 @@ export default function ProfilePage() {
         router.push("/cart")
     }
 
-    const handleSaveAddress = (e: React.FormEvent) => {
+    const handleSaveAddress = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!newAddress.line1 || !newAddress.pincode) return
+        if (!newAddress.line1 || !newAddress.pincode || !newAddress.city || !newAddress.state) return
+
+        let updatedAddresses = [...addresses]
 
         if (editingId) {
-            setAddresses(addresses.map(addr => addr.id === editingId ? { ...newAddress, id: editingId } : addr))
+            updatedAddresses = addresses.map(addr => addr.id === editingId ? { ...newAddress, id: editingId } : addr)
             setEditingId(null)
         } else {
-            setAddresses([...addresses, { ...newAddress, id: Date.now() }])
+            updatedAddresses = [...addresses, { ...newAddress, id: Date.now() }]
         }
 
+        setAddresses(updatedAddresses)
         setIsAddingAddress(false)
-        setNewAddress({ type: "Home", line1: "", line2: "", pincode: "" })
+        setNewAddress({ id: 0, type: "Home", line1: "", line2: "", city: "", state: "", pincode: "" })
+
+        // Persist to DB
+        // Strip IDs before saving
+        const cleanAddresses = updatedAddresses.map(({ id, ...rest }) => rest)
+        await updateUserProfileAction(userPhone, { addresses: cleanAddresses })
     }
 
     const handleEdit = (address: Address) => {
@@ -199,8 +206,13 @@ export default function ProfilePage() {
         setIsAddingAddress(true)
     }
 
-    const handleDelete = (id: number) => {
-        setAddresses(addresses.filter(addr => addr.id !== id))
+    const handleDelete = async (id: number) => {
+        const updated = addresses.filter(addr => addr.id !== id)
+        setAddresses(updated)
+
+        // Persist to DB
+        const cleanAddresses = updated.map(({ id, ...rest }) => rest)
+        await updateUserProfileAction(userPhone, { addresses: cleanAddresses })
     }
 
     const handleLogout = () => {
@@ -357,7 +369,7 @@ export default function ProfilePage() {
                             </h3>
                             <button
                                 onClick={() => {
-                                    setNewAddress({ type: "Home", line1: "", line2: "", pincode: "" })
+                                    setNewAddress({ id: 0, type: "Home", line1: "", line2: "", city: "", state: "", pincode: "" })
                                     setEditingId(null)
                                     setIsAddingAddress(true)
                                 }}
@@ -410,6 +422,27 @@ export default function ProfilePage() {
                                         value={newAddress.pincode}
                                         onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
                                     />
+                                    <input
+                                        type="text"
+                                        placeholder="City"
+                                        className="w-full rounded-xl border-none bg-white px-4 py-3 text-sm font-medium outline-none"
+                                        value={newAddress.city}
+                                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+                                        required
+                                    />
+                                    <div className="relative w-full">
+                                        <select
+                                            className="w-full rounded-xl border-none bg-white px-4 py-3 text-sm font-medium outline-none appearance-none"
+                                            value={newAddress.state}
+                                            onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+                                            required
+                                        >
+                                            <option value="" disabled>Select State</option>
+                                            {INDIAN_STATES.map(state => (
+                                                <option key={state} value={state}>{state}</option>
+                                            ))}
+                                        </select>
+                                    </div>
                                     <Button size="sm" className="w-full rounded-xl mt-2 font-bold">
                                         {editingId ? "Update Location" : "Save Location"}
                                     </Button>
@@ -426,7 +459,7 @@ export default function ProfilePage() {
                                                 {addr.type}
                                             </span>
                                             <p className="font-medium">{addr.line1}</p>
-                                            <p className="text-sm text-muted">{addr.line2}, {addr.pincode}</p>
+                                            <p className="text-sm text-muted">{addr.line2 ? `${addr.line2}, ` : ''}{addr.city}, {addr.state} - {addr.pincode}</p>
                                         </div>
                                         <div className="flex gap-3">
                                             <button onClick={() => handleEdit(addr)} className="text-xs font-bold text-accent">Edit</button>

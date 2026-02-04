@@ -132,3 +132,55 @@ export async function togglePaymentVerificationAction(orderId: string, verified:
         return false
     }
 }
+
+// --- User Actions (Postgres) ---
+
+export interface UserProfile {
+    phoneNumber: string
+    name: string
+    addresses: DeliveryAddress[]
+}
+
+export async function getUserProfileAction(phone: string): Promise<UserProfile | null> {
+    try {
+        const { rows } = await sql`SELECT * FROM users WHERE phone_number = ${phone}`
+        if (rows.length === 0) return null
+
+        return {
+            phoneNumber: rows[0].phone_number,
+            name: rows[0].name,
+            addresses: rows[0].addresses || []
+        }
+    } catch (error) {
+        console.error("Postgres Get User Error:", error)
+        return null
+    }
+}
+
+export async function updateUserProfileAction(phone: string, data: { name?: string, addresses?: DeliveryAddress[] }): Promise<boolean> {
+    try {
+        // Upsert user: If exists update, else insert
+        // Note: valid PG syntax for upsert is INSERT ... ON CONFLICT ... DO UPDATE
+
+        // First check if user exists to decide on query structure, or use ON CONFLICT
+        // Since we might update only name OR only addresses, it's safer to read-modify-write or simple upsert logic
+
+        const existing = await getUserProfileAction(phone);
+
+        const newName = data.name !== undefined ? data.name : (existing?.name || "");
+        const newAddresses = data.addresses !== undefined ? JSON.stringify(data.addresses) : (existing ? JSON.stringify(existing.addresses) : '[]');
+
+        await sql`
+            INSERT INTO users (phone_number, name, addresses)
+            VALUES (${phone}, ${newName}, ${newAddresses})
+            ON CONFLICT (phone_number) 
+            DO UPDATE SET 
+                name = EXCLUDED.name,
+                addresses = EXCLUDED.addresses
+        `
+        return true
+    } catch (error) {
+        console.error("Postgres Update User Error:", error)
+        return false
+    }
+}

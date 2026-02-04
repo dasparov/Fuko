@@ -4,9 +4,9 @@ const dotenv = require('dotenv');
 dotenv.config({ path: '.env.local' });
 
 async function main() {
-    try {
-        console.log('Creating "orders" table...');
-        await sql`
+  try {
+    console.log('Creating "orders" table...');
+    await sql`
       CREATE TABLE IF NOT EXISTS orders (
         id VARCHAR(255) PRIMARY KEY,
         date VARCHAR(255) NOT NULL,
@@ -21,12 +21,23 @@ async function main() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `;
-        console.log('Created "orders" table.');
-        process.exit(0);
-    } catch (error) {
-        console.error('Error seeding database:', error);
-        process.exit(1);
-    }
+    console.log('Created "orders" table.');
+
+    console.log('Creating "users" table...');
+    await sql`
+      CREATE TABLE IF NOT EXISTS users (
+        phone_number VARCHAR(20) PRIMARY KEY,
+        name VARCHAR(255),
+        addresses JSONB DEFAULT '[]',
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+    console.log('Created "users" table.');
+    process.exit(0);
+  } catch (error) {
+    console.error('Error seeding database:', error);
+    process.exit(1);
+  }
 }
 
 main();

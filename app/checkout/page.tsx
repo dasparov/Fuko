@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/Button"
 import { useCart } from "@/context/CartContext"
-import { saveOrderAction } from "@/app/actions"
-import { Order, OrderStatus } from "@/lib/orders"
+import { saveOrderAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
+import { Order, OrderStatus, DeliveryAddress } from "@/lib/orders"
 import { ArrowLeft, Check, MapPin, CreditCard, ChevronRight, Phone, User, Image as ImageIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -14,14 +14,8 @@ import { INDIAN_STATES } from "@/lib/constants"
 
 type CheckoutStep = "login" | "otp" | "onboarding" | "address" | "payment" | "confirmation"
 
-interface Address {
+interface Address extends DeliveryAddress {
     id: number
-    type: string
-    line1: string
-    line2: string
-    city: string
-    state: string
-    pincode: string
 }
 
 export default function CheckoutPage() {
@@ -49,23 +43,32 @@ export default function CheckoutPage() {
 
     useEffect(() => {
         setTimeout(() => {
-            // Check for saved phone in localStorage
+            // Check for saved phone in localStorage (keep this for session persistence)
             const savedPhone = localStorage.getItem("fuko_user_phone")
 
             if (savedPhone) {
                 setPhoneNumber(savedPhone)
 
-                const savedName = localStorage.getItem("fuko_user_name")
-                if (savedName) {
-                    setStep("address")
-                    // Load addresses only if logged in
-                    const savedAddresses = localStorage.getItem("fuko_addresses")
-                    if (savedAddresses) {
-                        setAddresses(JSON.parse(savedAddresses))
+                // Fetch User Profile from Postgres
+                getUserProfileAction(savedPhone).then(profile => {
+                    if (profile) {
+                        // Check if user has name (returning user)
+                        if (profile.name) {
+                            localStorage.setItem("fuko_user_name", profile.name) // Keep purely for UI helper
+                            setStep("address")
+                            // Load addresses
+                            if (profile.addresses.length > 0) {
+                                const dbAddresses = profile.addresses.map((addr, idx) => ({ ...addr, id: idx + 1 }))
+                                setAddresses(dbAddresses)
+                            }
+                        } else {
+                            setStep("onboarding")
+                        }
+                    } else {
+                        // Profile doesn't exist yet, go to onboarding
+                        setStep("onboarding")
                     }
-                } else {
-                    setStep("onboarding")
-                }
+                })
             }
         }, 0)
     }, [])
@@ -100,27 +103,24 @@ export default function CheckoutPage() {
 
         // Mark as logged in
         localStorage.setItem("fuko_user_phone", phoneNumber)
-        // Mark as logged in
-        localStorage.setItem("fuko_user_phone", phoneNumber)
 
-        // Check if user has a name (returning user)
-        const savedName = localStorage.getItem("fuko_user_name")
+        // Fetch Profile
+        getUserProfileAction(phoneNumber).then(profile => {
+            if (profile && profile.name) {
+                toast.success(`Welcome back, ${profile.name}!`)
+                localStorage.setItem("fuko_user_name", profile.name)
 
-        // Load existing addresses if any
-        const savedAddresses = localStorage.getItem("fuko_addresses")
-        let parsedAddresses: Address[] = []
-        if (savedAddresses) {
-            parsedAddresses = JSON.parse(savedAddresses)
-            setAddresses(parsedAddresses)
-        }
-
-        if (!savedName) {
-            toast.success("Verified! Let's get to know you.")
-            setStep("onboarding")
-        } else {
-            toast.success(`Welcome back, ${savedName}!`)
-            setStep("address")
-        }
+                // Load addresses
+                if (profile.addresses.length > 0) {
+                    const dbAddresses = profile.addresses.map((addr, idx) => ({ ...addr, id: idx + 1 }))
+                    setAddresses(dbAddresses)
+                }
+                setStep("address")
+            } else {
+                toast.success("Verified! Let's get to know you.")
+                setStep("onboarding")
+            }
+        })
     }
 
 
@@ -308,10 +308,7 @@ export default function CheckoutPage() {
                 return
             }
 
-            // Save Name
-            localStorage.setItem("fuko_user_name", onboardingName)
-
-            // Save First Address
+            // Save to DB
             const firstAddress: Address = {
                 id: Date.now(),
                 type: "Home",
@@ -321,14 +318,17 @@ export default function CheckoutPage() {
                 state,
                 pincode
             }
-            // Save Address - Merge with existing to prevent data loss
-            const existingAddressesStr = localStorage.getItem("fuko_addresses")
-            const existingAddresses = existingAddressesStr ? JSON.parse(existingAddressesStr) : []
-            const updatedAddresses = [...existingAddresses, firstAddress]
 
-            setAddresses(updatedAddresses)
-            localStorage.setItem("fuko_addresses", JSON.stringify(updatedAddresses))
+            setAddresses([firstAddress])
             setSelectedAddress(firstAddress)
+
+            // Persist to Postgres
+            // Strip ID
+            const { id, ...cleanAddress } = firstAddress
+            updateUserProfileAction(phoneNumber, {
+                name: onboardingName,
+                addresses: [cleanAddress]
+            })
 
             toast.success(`Perfect, ${onboardingName.split(' ')[0]}! Ready for delivery.`)
             setStep("payment") // Go specifically to payment since we have an address now
