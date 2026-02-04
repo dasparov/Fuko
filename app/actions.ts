@@ -30,8 +30,10 @@ export async function getSiteSettingsAction(): Promise<SiteSettings> {
 export async function saveSiteSettingsAction(settings: SiteSettings): Promise<boolean> {
     try {
         await kv.set(SETTINGS_KEY, settings)
-        revalidatePath('/')
+        // Revalidate the root layout to update the banner globally
+        revalidatePath('/', 'layout')
         revalidatePath('/fukoadmin')
+        revalidatePath('/')
         return true
     } catch (error) {
         console.error("KV Write Error:", error)

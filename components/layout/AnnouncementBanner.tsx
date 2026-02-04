@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react"
 import { getSiteSettingsAction } from "@/app/actions"
-import { SiteSettings } from "@/lib/settings"
+import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 export function AnnouncementBanner() {
-    const [settings, setSettings] = useState<SiteSettings | null>(null)
+    // Start with defaults so it doesn't "pop" in or hide if fetch fails
+    const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS)
     const pathname = usePathname()
 
     useEffect(() => {
