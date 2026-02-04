@@ -394,7 +394,7 @@ export default function AdminDashboard() {
                         <div className="relative w-24 h-12 mx-auto mb-6">
                             <img src="/fuko-logo-v2.png" alt="Fuko" className="object-contain w-full h-full" />
                         </div>
-                        <h1 className="text-xl font-heading font-bold text-primary tracking-widest uppercase">Archive Control</h1>
+                        <h1 className="text-xl font-heading font-bold text-primary tracking-widest uppercase">Fuko Mission Control</h1>
                         <p className="text-muted text-xs mt-2 font-bold tracking-wider">RESTRICTED ACCESS</p>
                     </div>
                     <form onSubmit={handlePinSubmit} className="space-y-4">
@@ -411,7 +411,7 @@ export default function AdminDashboard() {
                             type="submit"
                             className="w-full bg-accent text-white font-bold py-4 rounded-2xl hover:bg-accent/90 active:scale-95 transition-all uppercase tracking-widest text-xs shadow-lg shadow-accent/20"
                         >
-                            Unlock Archives
+                            Unlock
                         </button>
                     </form>
                     <div className="mt-8 text-center">
