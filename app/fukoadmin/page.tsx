@@ -3,7 +3,7 @@
 import { getOrdersAction, updateOrderStatusAction, deleteOrderAction, togglePaymentVerificationAction } from "@/app/actions"
 import { Order, OrderStatus } from "@/lib/orders"
 import { getAllProductsAdminAction, saveProductAction, deleteProductAction, Product } from "@/app/actions"
-import { SiteSettings } from "@/lib/settings"
+import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
 import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
@@ -245,13 +245,8 @@ export default function AdminDashboard() {
                 setSettings(settingsResult.value);
             } else {
                 console.error("Failed to load settings", settingsResult.reason);
-                // Fallback to defaults if KV fails
-                setSettings({
-                    announcementBanner: { text: "", isVisible: false },
-                    heroText: { title: "Know Smoking", subtitle: "Premium tobacco." },
-                    heroImage: "/hero-bg-v2.jpg",
-                    tickerText: "..."
-                } as any);
+                // Fallback to complete defaults if KV fails
+                setSettings(DEFAULT_SETTINGS);
                 toast.error("Using default settings (Load Failed)");
             }
 
