@@ -25,20 +25,7 @@ export default function ProfilePage() {
     const [showOtp, setShowOtp] = useState(false)
     const [isVerifying, setIsVerifying] = useState(false)
 
-    // Secret Admin Access - Tap avatar 5 times
-    const [tapCount, setTapCount] = useState(0)
-    const [showAdminLink, setShowAdminLink] = useState(false)
 
-    const handleAvatarTap = () => {
-        const newCount = tapCount + 1
-        setTapCount(newCount)
-        if (newCount >= 5) {
-            setShowAdminLink(true)
-            toast.success("Admin mode unlocked!")
-        }
-        // Reset tap count after 2 seconds of inactivity
-        setTimeout(() => setTapCount(0), 2000)
-    }
 
     // Order History State
     const [activeOrders, setActiveOrders] = useState<Order[]>([])
@@ -240,12 +227,11 @@ export default function ProfilePage() {
             {/* User Info Card */}
             <div className="mx-6 mb-8 flex items-center gap-4 rounded-3xl bg-paper p-6">
                 {userName && (
-                    <button
-                        onClick={handleAvatarTap}
+                    <div
                         className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent text-2xl font-bold text-white transition-transform active:scale-95"
                     >
                         {userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                    </button>
+                    </div>
                 )}
                 <div className="flex-1">
                     {!isLoggedIn ? (
@@ -357,24 +343,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Secret Admin Link - Revealed after 5 taps on avatar */}
-            {showAdminLink && (
-                <div className="mx-6 mb-6">
-                    <Link href="/admin" className="block">
-                        <div className="rounded-2xl bg-gradient-to-r from-gray-800 to-gray-900 p-4 flex items-center justify-between shadow-lg">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10">
-                                    <Settings className="h-5 w-5 text-white" />
-                                </div>
-                                <div>
-                                    <p className="font-bold text-white">Admin Dashboard</p>
-                                    <p className="text-xs text-gray-400">Manage orders & inventory</p>
-                                </div>
-                            </div>
-                            <div className="text-gray-400">→</div>
-                        </div>
-                    </Link>
-                </div>
-            )}
+
             {isLoggedIn && (
                 <>
                     <section className="px-6 mb-8">

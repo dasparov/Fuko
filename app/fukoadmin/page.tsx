@@ -388,34 +388,34 @@ export default function AdminDashboard() {
     // Block render if not authenticated
     if (!isAuthenticated) {
         return (
-            <main className="min-h-screen bg-gray-900 flex items-center justify-center p-6">
+            <main className="min-h-screen bg-background flex items-center justify-center p-6">
                 <div className="w-full max-w-sm">
-                    <div className="text-center mb-8">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 mb-4 animate-pulse">
-                            <Settings className="h-8 w-8 text-white" />
+                    <div className="text-center mb-10">
+                        <div className="relative w-24 h-12 mx-auto mb-6">
+                            <img src="/fuko-logo-v2.png" alt="Fuko" className="object-contain w-full h-full" />
                         </div>
-                        <h1 className="text-2xl font-bold text-white tracking-widest uppercase">Restricted Area</h1>
-                        <p className="text-gray-400 text-xs mt-2 font-mono">AUTHORIZED PERSONNEL ONLY</p>
+                        <h1 className="text-xl font-heading font-bold text-primary tracking-widest uppercase">Archive Control</h1>
+                        <p className="text-muted text-xs mt-2 font-bold tracking-wider">RESTRICTED ACCESS</p>
                     </div>
                     <form onSubmit={handlePinSubmit} className="space-y-4">
                         <input
                             type="password"
                             value={pin}
                             onChange={(e) => setPin(e.target.value)}
-                            placeholder="ENTER ACCESS CODE"
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-center text-white font-mono tracking-[0.5em] focus:outline-none focus:border-white/30 focus:bg-white/10 transition-all placeholder:tracking-normal placeholder:font-sans"
+                            placeholder="SECRET PIN"
+                            className="w-full bg-paper border-2 border-transparent focus:border-accent/20 rounded-2xl px-4 py-4 text-center text-primary font-heading font-bold text-xl tracking-[0.5em] outline-none transition-all placeholder:tracking-normal placeholder:font-sans placeholder:text-muted/30 placeholder:text-sm"
                             autoFocus
                             maxLength={4}
                         />
                         <button
                             type="submit"
-                            className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors uppercase tracking-widest text-sm"
+                            className="w-full bg-accent text-white font-bold py-4 rounded-2xl hover:bg-accent/90 active:scale-95 transition-all uppercase tracking-widest text-xs shadow-lg shadow-accent/20"
                         >
-                            Authenticate
+                            Unlock Archives
                         </button>
                     </form>
                     <div className="mt-8 text-center">
-                        <Link href="/" className="text-gray-500 text-xs hover:text-white transition-colors">← Return to Public Site</Link>
+                        <Link href="/" className="text-muted/50 text-xs font-bold hover:text-accent transition-colors">← Return to Public Site</Link>
                     </div>
                 </div>
             </main>
