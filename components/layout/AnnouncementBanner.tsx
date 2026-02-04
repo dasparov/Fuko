@@ -1,20 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getSiteSettings, SiteSettings } from "@/lib/settings"
+import { getSiteSettingsAction } from "@/app/actions"
+import { SiteSettings } from "@/lib/settings"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
-
 import { usePathname } from "next/navigation"
-
 export function AnnouncementBanner() {
     const [settings, setSettings] = useState<SiteSettings | null>(null)
     const pathname = usePathname()
 
     useEffect(() => {
-        setTimeout(() => {
-            setSettings(getSiteSettings())
-        }, 0)
+        async function load() {
+            try {
+                const s = await getSiteSettingsAction()
+                setSettings(s)
+            } catch (err) {
+                console.error("Banner load error:", err)
+            }
+        }
+        load()
     }, [])
 
     if (!settings?.announcementBanner.isVisible || pathname?.startsWith("/admin") || pathname?.startsWith("/fukoadmin")) return null
