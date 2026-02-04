@@ -1281,7 +1281,13 @@ export default function AdminDashboard() {
                                         placeholder="Banner text..."
                                     />
                                     <div className="flex items-center gap-4 bg-gray-50 rounded-[1.5rem] p-4 font-medium text-xs text-gray-500">
-                                        <Plus className="h-4 w-4" /> Destination: {settings.announcementBanner.link || "N/A"}
+                                        <Plus className="h-4 w-4 shrink-0" />
+                                        <input
+                                            className="w-full bg-transparent border-none outline-none text-gray-700 placeholder:text-gray-400"
+                                            value={settings.announcementBanner.link || ""}
+                                            onChange={e => setSettings({ ...settings, announcementBanner: { ...settings.announcementBanner, link: e.target.value } })}
+                                            placeholder="Destination URL (e.g. /shop)"
+                                        />
                                     </div>
                                 </div>
 
