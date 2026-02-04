@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { ArrowLeft, Check, Minus, Plus, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -21,8 +22,14 @@ export default function ProductPage() {
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState(0);
     const [isAdding, setIsAdding] = useState(false);
+    const [isImageLoaded, setIsImageLoaded] = useState(false);
 
     const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
+    useEffect(() => {
+        // Reset image loaded state when active image changes
+        setIsImageLoaded(false);
+    }, [activeImage]);
 
     useEffect(() => {
         // Simulate fetch delay for premium feel
@@ -130,8 +137,12 @@ export default function ProductPage() {
                     src={images[activeImage]}
                     alt={product.name}
                     fill
-                    className="object-cover"
+                    className={cn(
+                        "object-cover transition-all duration-700 ease-in-out",
+                        isImageLoaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-xl scale-110"
+                    )}
                     priority
+                    onLoad={() => setIsImageLoaded(true)}
                 />
                 {/* Pagination Dots (Only if > 1 image) */}
                 {images.length > 1 && (

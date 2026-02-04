@@ -23,6 +23,7 @@ interface ProductCardProps {
 export function ProductCard({ id, name, price, description, images, tag, className }: ProductCardProps) {
     const { addItem } = useCart()
     const [isAdding, setIsAdding] = useState(false)
+    const [isImageLoaded, setIsImageLoaded] = useState(false)
 
     const handleAdd = (e: React.MouseEvent) => {
         e.preventDefault() // Prevent navigation if clicking the button inside a Link
@@ -71,8 +72,12 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
                                     src={images[0]}
                                     alt={name}
                                     fill
-                                    className="object-cover"
+                                    className={cn(
+                                        "object-cover transition-all duration-700 ease-in-out",
+                                        isImageLoaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-xl scale-110"
+                                    )}
                                     unoptimized={images[0].startsWith("data:")}
+                                    onLoad={() => setIsImageLoaded(true)}
                                 />
                             </div>
                         ) : (
