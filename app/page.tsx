@@ -17,11 +17,16 @@ export default function Home() {
 
   useEffect(() => {
     async function loadData() {
-      const storedSettings = await getSiteSettingsAction();
-      setSettings(storedSettings);
-      const products = await getProductsAction();
-      setFeaturedProducts(products.slice(0, 3));
-      setIsLoading(false);
+      try {
+        const storedSettings = await getSiteSettingsAction();
+        setSettings(storedSettings);
+        const products = await getProductsAction();
+        setFeaturedProducts(products.slice(0, 3));
+      } catch (error) {
+        console.error("Failed to load homepage data", error);
+      } finally {
+        setIsLoading(false);
+      }
     }
     loadData();
   }, []);
@@ -29,7 +34,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[90vh] w-full overflow-hidden bg-gray-900">
+      <section className="relative h-[90vh] w-full overflow-hidden bg-background">
         <Image
           src={settings?.heroImage || "/hero-bg-v2.jpg"}
           alt="Fuko Tobacco Blend"
