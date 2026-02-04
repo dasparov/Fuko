@@ -14,7 +14,7 @@ export interface SiteSettings {
     tickerText?: string
 }
 
-const STORAGE_KEY = "fuko_settings_v2"
+const STORAGE_KEY = "fuko_settings_v3"
 
 const DEFAULT_SETTINGS: SiteSettings = {
     announcementBanner: {
@@ -24,7 +24,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     },
     heroText: {
         title: "know Smoking",
-        subtitle: "100% Additive-free. No expanded filler. Just the raw, undulterated leaf."
+        subtitle: "Premium Indian Tobacco defined by its soil. Experience true terroir character."
     },
     heroImage: "/hero-bg-v2.jpg",
     tickerText: "ZERO ADDITIVES • NO EXPANDED VOLUME • 100% WHOLE LEAF • NATIVE CURING PROCESS • HAND SELECTED"
