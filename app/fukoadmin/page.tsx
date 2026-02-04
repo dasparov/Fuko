@@ -219,25 +219,46 @@ export default function AdminDashboard() {
         setIsRefreshing(true)
         // Simulate network delay for better UX
         setTimeout(async () => {
-            try {
-                const currentOrders = await getOrdersAction()
-                setOrders(currentOrders) // Now returns Order[] directly
-                setProducts(await getAllProductsAdminAction())
+            // Load resources independently
+            const [ordersResult, productsResult, settingsResult] = await Promise.allSettled([
+                getOrdersAction(),
+                getAllProductsAdminAction(),
+                getSiteSettingsAction()
+            ]);
 
-                const currentSettings = await getSiteSettingsAction()
-                setSettings(currentSettings)
-
-                // Calculate Analytics
-                calculateAnalytics(currentOrders)
-                toast.success("Dashboard data refreshed")
-            } catch (e) {
-                console.error("Dashboard Load Error", e)
-                toast.error("Failed to load dashboard data")
-            } finally {
-                setIsLoading(false)
-                setIsRefreshing(false)
+            if (ordersResult.status === "fulfilled") {
+                setOrders(ordersResult.value);
+                calculateAnalytics(ordersResult.value);
+            } else {
+                console.error("Failed to load orders", ordersResult.reason);
+                toast.error("Failed to load orders");
             }
-        }, 600)
+
+            if (productsResult.status === "fulfilled") {
+                setProducts(productsResult.value);
+            } else {
+                console.error("Failed to load products", productsResult.reason);
+                toast.error("Failed to load products");
+            }
+
+            if (settingsResult.status === "fulfilled") {
+                setSettings(settingsResult.value);
+            } else {
+                console.error("Failed to load settings", settingsResult.reason);
+                // Fallback to defaults if KV fails
+                setSettings({
+                    announcementBanner: { text: "", isVisible: false },
+                    heroText: { title: "Know Smoking", subtitle: "Premium tobacco." },
+                    heroImage: "/hero-bg-v2.jpg",
+                    tickerText: "..."
+                } as any);
+                toast.error("Using default settings (Load Failed)");
+            }
+
+            setIsLoading(false)
+            setIsRefreshing(false)
+            toast.success("Dashboard refreshed")
+        }, 800)
     }
 
 
