@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
         const verification = await client.verify.v2.services(verifyServiceSid)
             .verifications
-            .create({ to: `+91${phoneNumber}`, channel: "sms" })
+            .create({ to: `+91${phoneNumber}`, channel: "whatsapp" })
 
         return NextResponse.json({ success: true, status: verification.status })
     } catch (error) {
