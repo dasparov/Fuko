@@ -1137,20 +1137,48 @@ export default function AdminDashboard() {
                             <div className="bg-white p-8 rounded-[2.5rem] border border-gray-200 shadow-sm">
                                 <h3 className="font-heading text-xl font-bold mb-6">Archive Liquidity</h3>
                                 <div className="space-y-4">
-                                    {products.slice(0, 3).map((p, i) => (
-                                        <div key={p.id} className="flex items-center gap-4">
-                                            <div className="h-10 w-10 rounded-xl bg-gray-100 overflow-hidden bg-paper">
-                                                <img src={p.images?.[0] || "/placeholder.png"} className="w-full h-full object-cover" />
+                                    {(() => {
+                                        // Calculate All-Time Product Performance
+                                        const productPerf = validOrders.reduce((acc, order) => {
+                                            order.items.forEach(item => {
+                                                if (!acc[item.id]) {
+                                                    acc[item.id] = {
+                                                        ...item,
+                                                        totalQty: 0,
+                                                        totalRev: 0,
+                                                        // Ensure we have the latest product details if available
+                                                        details: products.find(p => p.id === item.id)
+                                                    }
+                                                }
+                                                acc[item.id].totalQty += item.quantity
+                                                acc[item.id].totalRev += (item.price * item.quantity)
+                                            })
+                                            return acc
+                                        }, {} as Record<string, { name: string, price: number, totalQty: number, totalRev: number, details?: Product }>)
+
+                                        const topProducts = Object.values(productPerf)
+                                            .sort((a, b) => b.totalRev - a.totalRev)
+                                            .slice(0, 3)
+
+                                        if (topProducts.length === 0) {
+                                            return <p className="text-center text-xs text-gray-400 font-bold py-4 uppercase tracking-widest">No Sales Data Yet</p>
+                                        }
+
+                                        return topProducts.map((p) => (
+                                            <div key={p.details?.id || p.name} className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-xl bg-gray-100 overflow-hidden bg-paper">
+                                                    <img src={p.details?.images?.[0] || "/placeholder.png"} className="w-full h-full object-cover" alt={p.name} />
+                                                </div>
+                                                <div className="flex-1 text-sm font-bold">
+                                                    <p>{p.name}</p>
+                                                    <p className="text-xs text-gray-400">{p.totalQty} Units Moved</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-sm font-black text-gray-900">₹{p.totalRev}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex-1 text-sm font-bold">
-                                                <p>{p.name}</p>
-                                                <p className="text-xs text-gray-400">{i === 0 ? 42 : i === 1 ? 28 : 15} Units Moved</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-black text-gray-900">₹{(i === 0 ? 42 : i === 1 ? 28 : 15) * p.price}</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    })()}
                                 </div>
                             </div>
 
