@@ -119,7 +119,15 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-bold text-accent">Radical Transparency</h4>
-              <p className="text-sm text-muted">From the soil to the pouch, our supply chain is open. You know what you&apos;re smoking.</p>
+              <p className="text-sm text-muted">From the soil to the pouch, our supply chain is open. You know exactly what you&apos;re smoking.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-accent">Sovereign Craft</h4>
+              <p className="text-sm text-muted">For 500 years, India has grown the world&apos;s best tobacco. We&apos;re finally keeping the best of the harvest right here.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-accent">Terroir First</h4>
+              <p className="text-sm text-muted">We don&apos;t manufacture flavor; we curate it. Whether it&apos;s the bold Regur Black from Guntur or the cigar-like Semman Red from Dindigul, the soil does the work.</p>
             </div>
           </div>
         </div>
