@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Mail, Phone, MapPin } from "lucide-react"
+import { ArrowLeft, Mail, MapPin } from "lucide-react"
 
 export default function SupportPage() {
     return (
@@ -33,21 +33,8 @@ export default function SupportPage() {
                         <div>
                             <h3 className="font-semibold text-gray-900">Email Us</h3>
                             <p className="text-sm text-gray-500 mt-1">For general inquiries and order support.</p>
-                            <a href="mailto:support@fuko.in" className="text-blue-600 font-medium text-sm mt-2 inline-block hover:underline">
-                                support@fuko.in
-                            </a>
-                        </div>
-                    </div>
-
-                    <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4">
-                        <div className="bg-green-50 p-3 rounded-xl">
-                            <Phone className="w-6 h-6 text-green-600" />
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-900">Call Us</h3>
-                            <p className="text-sm text-gray-500 mt-1">Mon-Fri, 9:00 AM - 6:00 PM IST</p>
-                            <a href="tel:+919876543210" className="text-green-600 font-medium text-sm mt-2 inline-block hover:underline">
-                                +91 98765 43210
+                            <a href="mailto:support@okfuko.shop" className="text-blue-600 font-medium text-sm mt-2 inline-block hover:underline">
+                                support@okfuko.shop
                             </a>
                         </div>
                     </div>
