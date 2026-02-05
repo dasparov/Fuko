@@ -148,6 +148,33 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* About Fuko Section */}
+        <div className="rounded-3xl bg-paper p-8 text-center mt-8">
+          <h3 className="mb-6 font-heading text-2xl font-bold">About Fuko: The 500-Year Leaf</h3>
+          <div className="space-y-6 text-left">
+            <div>
+              <h4 className="font-bold text-accent mb-2">The Vision</h4>
+              <p className="text-sm text-muted">Fuko was born from a simple observation: India has grown world-class tobacco for over five centuries, yet the modern smoker is often left with industrial, additive-filled commodities. We decided to change the narrative. Based in Goa, we are curators of the Indian terroir, bringing the raw, unadulterated character of our soil back to the ritual of smoking.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-accent mb-2">Our Roots: The Goa Connection</h4>
+              <p className="text-sm text-muted">The story of Indian tobacco began where we are today. In the late 1500s, the Portuguese anchored in Goa, bringing with them the first tobacco seeds from the New World. From these Goan shores, the leaf traveled inland, adapting to the diverse microclimates of the subcontinent and becoming an integral part of our agricultural identity.</p>
+              <p className="text-sm text-muted mt-2">Fuko is a post-colonial brand rooted in this gateway. We believe India is no longer just a source of raw materials for global brands. We are a destination for craft. We source our leaves from heritage farms that have perfected their trade over generations, ensuring that the best of the harvest stays exactly where it was grown.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-accent mb-2">The Fuko Philosophy</h4>
+              <p className="text-sm text-muted"><strong>Terroir Over Technology:</strong> We don&apos;t manufacture flavor in a lab. We curate it from the land. Whether it&apos;s the punchy intensity of Guntur&apos;s Regur Black or the smooth, river-fed sweetness of Kaveri Bright from Mysore, we let the soil do the talking.</p>
+              <p className="text-sm text-muted mt-2"><strong>The Un-Industrialized Purity:</strong> We define our quality by what we leave out. No chemical additives, no expanded fillers, and no artificial casings. Just 100% whole-leaf tobacco, hand-stripped and slow-cured by the Indian sun.</p>
+              <p className="text-sm text-muted mt-2"><strong>Radical Transparency:</strong> We believe you should know your farmer. Our supply chain is a direct line from the heritage fields of Andhra, Tamil Nadu, and Karnataka straight to your pouch.</p>
+            </div>
+            <div>
+              <h4 className="font-bold text-accent mb-2">The Ritual</h4>
+              <p className="text-sm text-muted">Fuko is for those who value the process. Rolling your own is an act of mindfulness—a brief pause to engage with a 500-year-old craft that started right here in Goa. We invite you to explore our archives, discover your preferred soil, and reclaim the dignity of the leaf.</p>
+              <p className="text-sm text-muted mt-3 text-center font-medium italic">Know Smoking. Experience Terroir.</p>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   );
