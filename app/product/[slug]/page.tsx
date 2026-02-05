@@ -165,6 +165,11 @@ export default function ProductPage() {
                         <h1 className="font-heading text-3xl font-bold leading-tight">
                             {product.name}
                         </h1>
+                        {product.weight && (
+                            <p className="mt-1 text-sm font-medium text-muted">
+                                {product.weight}
+                            </p>
+                        )}
                         <div className="mt-2 flex gap-2">
                             {tags.map((tag) => (
                                 <span

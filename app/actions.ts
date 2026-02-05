@@ -207,6 +207,7 @@ export interface Product {
         label: string
         color: "accent" | "nature"
     }
+    weight?: string
     isAvailable: boolean
     isHidden: boolean
 }
@@ -220,6 +221,7 @@ async function ensureProductsTable() {
             description TEXT,
             images JSONB DEFAULT '[]'::jsonb,
             tag JSONB,
+            weight TEXT,
             is_available BOOLEAN DEFAULT true,
             is_hidden BOOLEAN DEFAULT false
         )
@@ -237,6 +239,7 @@ export async function getProductsAction(): Promise<Product[]> {
             description: row.description,
             images: row.images || [],
             tag: row.tag || undefined,
+            weight: row.weight || undefined,
             isAvailable: row.is_available,
             isHidden: row.is_hidden
         }))
@@ -257,6 +260,7 @@ export async function getAllProductsAdminAction(): Promise<Product[]> {
             description: row.description,
             images: row.images || [],
             tag: row.tag || undefined,
+            weight: row.weight || undefined,
             isAvailable: row.is_available,
             isHidden: row.is_hidden
         }))
@@ -271,14 +275,15 @@ export async function saveProductAction(product: Product): Promise<boolean> {
         await ensureProductsTable()
         // Upsert
         await sql`
-            INSERT INTO products (id, name, price, description, images, tag, is_available, is_hidden)
+            INSERT INTO products (id, name, price, description, images, tag, weight, is_available, is_hidden)
             VALUES (
                 ${product.id}, 
                 ${product.name}, 
                 ${product.price}, 
                 ${product.description}, 
                 ${JSON.stringify(product.images)}, 
-                ${JSON.stringify(product.tag || null)}, 
+                ${JSON.stringify(product.tag || null)},
+                ${product.weight || null}, 
                 ${product.isAvailable}, 
                 ${product.isHidden}
             )
@@ -289,6 +294,7 @@ export async function saveProductAction(product: Product): Promise<boolean> {
                 description = EXCLUDED.description,
                 images = EXCLUDED.images,
                 tag = EXCLUDED.tag,
+                weight = EXCLUDED.weight,
                 is_available = EXCLUDED.is_available,
                 is_hidden = EXCLUDED.is_hidden
         `

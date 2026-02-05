@@ -333,6 +333,7 @@ export default function AdminDashboard() {
             price: Number(tempProduct.price),
             description: tempProduct.description || "",
             images: tempProduct.images || [],
+            weight: tempProduct.weight,
             isAvailable: tempProduct.isAvailable ?? true,
             isHidden: tempProduct.isHidden ?? false,
             tag: tempProduct.tag
@@ -720,6 +721,18 @@ export default function AdminDashboard() {
                                                 value={tempProduct.price || ""}
                                                 onChange={e => setTempProduct({ ...tempProduct, price: Number(e.target.value) })}
                                             />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <label className="text-xs font-black uppercase text-gray-400 px-2">Weight</label>
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-gray-50 rounded-2xl p-4 border-none outline-none font-bold text-gray-900"
+                                                    placeholder="e.g., 40g"
+                                                    value={tempProduct.weight || ""}
+                                                    onChange={e => setTempProduct({ ...tempProduct, weight: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
