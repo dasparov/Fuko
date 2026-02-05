@@ -44,7 +44,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[90vh] w-full overflow-hidden bg-background">
+      <section className="relative h-[90vh] w-full overflow-hidden bg-paper">
         <Image
           src={settings?.heroImage || "/hero-bg-v2.jpg"}
           alt="Fuko Tobacco Blend"
