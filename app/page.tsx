@@ -15,6 +15,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [isHeroLoaded, setIsHeroLoaded] = useState(false);
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
+  const [showTitle, setShowTitle] = useState(false);
+  const [showSubtitle, setShowSubtitle] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -26,6 +28,9 @@ export default function Home() {
 
       if (settingsResult.status === "fulfilled") {
         setSettings(settingsResult.value);
+        // Show title first, then subtitle after delay
+        setTimeout(() => setShowTitle(true), 100);
+        setTimeout(() => setShowSubtitle(true), 800);
       } else {
         console.error("Failed to load settings", settingsResult.reason);
       }
@@ -59,10 +64,10 @@ export default function Home() {
             <div className="relative mx-auto mb-6 h-16 w-32">
               <Image src="/fuko-logo-v2.png" alt="Fuko Logo" fill className="object-contain" />
             </div>
-            <h1 className={`font-heading text-5xl font-bold leading-tight md:text-7xl drop-shadow-lg transition-opacity duration-700 ${settings?.heroText.title ? 'opacity-100' : 'opacity-0'}`}>
+            <h1 className={`font-heading text-5xl font-bold leading-tight md:text-7xl drop-shadow-lg transition-opacity duration-700 ${showTitle ? 'opacity-100' : 'opacity-0'}`}>
               {settings?.heroText.title}
             </h1>
-            <p className={`mt-4 max-w-md font-body text-lg opacity-95 drop-shadow-md font-medium transition-opacity duration-700 delay-500 ${settings?.heroText.subtitle ? 'opacity-95' : 'opacity-0'}`}>
+            <p className={`mt-4 max-w-md font-body text-lg drop-shadow-md font-medium transition-opacity duration-700 ${showSubtitle ? 'opacity-95' : 'opacity-0'}`}>
               {settings?.heroText.subtitle}
             </p>
           </div>
