@@ -327,21 +327,35 @@ export default function AdminDashboard() {
             toast.error("Name and Price are required")
             return
         }
-        const productToSave: Product = {
-            id: tempProduct.id || tempProduct.name.toLowerCase().replace(/\s+/g, '-'),
-            name: tempProduct.name,
-            price: Number(tempProduct.price),
-            description: tempProduct.description || "",
-            images: tempProduct.images || [],
-            weight: tempProduct.weight,
-            isAvailable: tempProduct.isAvailable ?? true,
-            isHidden: tempProduct.isHidden ?? false,
-            tag: tempProduct.tag
-        }
-        if (await saveProductAction(productToSave)) {
-            setProducts(await getAllProductsAdminAction())
-            setIsEditingProduct(null)
-            toast.success("Product saved to archives")
+
+        setIsSaving(true)
+        try {
+            const productToSave: Product = {
+                id: tempProduct.id || tempProduct.name.toLowerCase().replace(/\s+/g, '-'),
+                name: tempProduct.name,
+                price: Number(tempProduct.price),
+                description: tempProduct.description || "",
+                images: tempProduct.images || [],
+                weight: tempProduct.weight,
+                isAvailable: tempProduct.isAvailable ?? true,
+                isHidden: tempProduct.isHidden ?? false,
+                tag: tempProduct.tag
+            }
+
+            const success = await saveProductAction(productToSave)
+            if (success) {
+                setProducts(await getAllProductsAdminAction())
+                setIsEditingProduct(null)
+                setTempProduct({ images: [] })
+                toast.success("Product saved to archives")
+            } else {
+                toast.error("Failed to save product")
+            }
+        } catch (error) {
+            console.error("Save product error:", error)
+            toast.error("Error saving product")
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -890,7 +904,13 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex gap-4 mt-8 pt-6 border-t border-gray-100">
                                         <button onClick={() => setIsEditingProduct(null)} className="flex-1 py-4 text-gray-400 font-bold hover:text-gray-900 transition-colors">Cancel</button>
-                                        <button onClick={handleSaveProduct} className="flex-[2] py-4 bg-gray-900 text-white rounded-3xl font-bold shadow-xl shadow-gray-200 active:scale-95 transition-all">Archive Blend</button>
+                                        <button
+                                            onClick={handleSaveProduct}
+                                            disabled={isSaving}
+                                            className="flex-[2] py-4 bg-gray-900 text-white rounded-3xl font-bold shadow-xl shadow-gray-200 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {isSaving ? "Saving..." : "Archive Blend"}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
