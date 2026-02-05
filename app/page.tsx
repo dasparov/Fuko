@@ -144,7 +144,7 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-bold text-accent">Terroir First</h4>
-              <p className="text-sm text-muted">We don&apos;t manufacture flavor; we curate it. Whether it&apos;s the bold Regur Black from Guntur or the cigar-like Semman Red from Dindigul, the soil does the work.</p>
+              <p className="text-sm text-muted">We don&apos;t manufacture flavor; we curate it. Whether it&apos;s the bold Regur Black from Guntur or the Kavery Bright from Mysore—prized for its natural sweetness and silky smoothness—the soil does the work.</p>
             </div>
           </div>
         </div>
