@@ -142,7 +142,7 @@ export default function ProductPage() {
     return (
         <main className="min-h-screen bg-background pb-32">
             {/* Header */}
-            <div className="fixed top-0 z-40 flex w-full items-center justify-between p-6">
+            <div className="fixed top-10 z-40 flex w-full items-center justify-between p-6">
                 <Link href="/" className="rounded-full bg-white/50 p-2 backdrop-blur-md">
                     <ArrowLeft className="h-6 w-6" />
                 </Link>
