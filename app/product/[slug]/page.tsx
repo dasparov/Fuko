@@ -57,10 +57,13 @@ export default function ProductPage() {
         return (
             <main className="min-h-screen bg-background pb-32">
                 {/* Header */}
-                <div className="fixed top-0 z-40 flex w-full items-center justify-between p-6">
-                    <Link href="/" className="rounded-full bg-white/50 p-2 backdrop-blur-md">
-                        <ArrowLeft className="h-6 w-6" />
-                    </Link>
+                <div className="fixed left-0 right-0 top-10 z-50 flex items-center justify-between px-4 py-3">
+                    <button
+                        onClick={() => router.back()}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm"
+                    >
+                        <ArrowLeft className="h-5 w-5 text-gray-900" />
+                    </button>
                 </div>
 
                 {/* Image Gallery Skeleton */}
