@@ -80,10 +80,10 @@ export default function Home() {
       {/* Marquee Section */}
       <div className="relative flex overflow-x-hidden bg-accent py-3 text-white">
         <div className="animate-marquee whitespace-nowrap font-heading text-sm font-bold tracking-widest uppercase">
-          <span>{settings?.tickerText || "ZERO ADDITIVES • NO EXPANDED VOLUME • 100% WHOLE LEAF"} • </span>
-          <span>{settings?.tickerText || "ZERO ADDITIVES • NO EXPANDED VOLUME • 100% WHOLE LEAF"} • </span>
-          <span>{settings?.tickerText || "ZERO ADDITIVES • NO EXPANDED VOLUME • 100% WHOLE LEAF"} • </span>
-          <span>{settings?.tickerText || "ZERO ADDITIVES • NO EXPANDED VOLUME • 100% WHOLE LEAF"} • </span>
+          <span>{settings?.tickerText} • </span>
+          <span>{settings?.tickerText} • </span>
+          <span>{settings?.tickerText} • </span>
+          <span>{settings?.tickerText} • </span>
         </div>
       </div>
 
