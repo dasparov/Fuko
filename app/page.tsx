@@ -29,8 +29,8 @@ export default function Home() {
       if (settingsResult.status === "fulfilled") {
         setSettings(settingsResult.value);
         // Show title first, then subtitle after delay
-        setTimeout(() => setShowTitle(true), 100);
-        setTimeout(() => setShowSubtitle(true), 800);
+        setTimeout(() => setShowTitle(true), 0);
+        setTimeout(() => setShowSubtitle(true), 500);
       } else {
         console.error("Failed to load settings", settingsResult.reason);
       }
