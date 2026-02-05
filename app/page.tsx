@@ -19,6 +19,9 @@ export default function Home() {
   const [showSubtitle, setShowSubtitle] = useState(false);
 
   useEffect(() => {
+    // Show title immediately on mount
+    setShowTitle(true);
+
     async function loadData() {
       // Load both resources in parallel; if one fails, the other can still succeed.
       const [settingsResult, productsResult] = await Promise.allSettled([
@@ -28,9 +31,8 @@ export default function Home() {
 
       if (settingsResult.status === "fulfilled") {
         setSettings(settingsResult.value);
-        // Show title first, then subtitle after delay
-        setTimeout(() => setShowTitle(true), 0);
-        setTimeout(() => setShowSubtitle(true), 500);
+        // Show subtitle after settings load
+        setTimeout(() => setShowSubtitle(true), 300);
       } else {
         console.error("Failed to load settings", settingsResult.reason);
       }
