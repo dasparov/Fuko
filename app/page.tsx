@@ -60,10 +60,10 @@ export default function Home() {
               <Image src="/fuko-logo-v2.png" alt="Fuko Logo" fill className="object-contain" />
             </div>
             <h1 className="font-heading text-5xl font-bold leading-tight md:text-7xl drop-shadow-lg">
-              {settings?.heroText.title || "Know Smoking."}
+              {settings?.heroText.title}
             </h1>
             <p className="mt-4 max-w-md font-body text-lg opacity-95 drop-shadow-md font-medium">
-              {settings?.heroText.subtitle || "Premium Indian Tobacco defined by its soil. Experience true terroir character."}
+              {settings?.heroText.subtitle}
             </p>
           </div>
 
