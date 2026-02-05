@@ -133,7 +133,7 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-bold text-accent">Whole-Leaf Quality</h4>
-              <p className="text-sm text-muted">We never use &quot;expanded&quot; tobacco or scraps. Only the prime leaf structure for a consistent burn.</p>
+              <p className="text-sm text-muted">We never use &quot;expanded&quot; tobacco or scraps. Only prime leaf structure for a consistent burn.</p>
             </div>
             <div>
               <h4 className="font-bold text-accent">Radical Transparency</h4>
