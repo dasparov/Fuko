@@ -21,7 +21,7 @@ export default function SupportPage() {
                 {/* Intro */}
                 <div className="text-center space-y-2">
                     <h2 className="text-2xl font-bold text-gray-900">How can we help?</h2>
-                    <p className="text-gray-500">We&apos;re here to assist you with any questions or issues.</p>
+                    <p className="text-gray-500">We&apos;re here to assist you with any questions.</p>
                 </div>
 
                 {/* Contact Cards */}
@@ -64,9 +64,9 @@ export default function SupportPage() {
                 <div className="flex items-start gap-3 text-sm text-gray-400 justify-center pt-8">
                     <MapPin className="w-4 h-4 shrink-0 mt-0.5" />
                     <p>
-                        Fuko Inc.<br />
-                        123, Innovation Complex,<br />
-                        Koramangala, Bengaluru - 560034
+                        Goa Trading Co.<br />
+                        PO BOX 13,<br />
+                        Goa, India 403501
                     </p>
                 </div>
 
