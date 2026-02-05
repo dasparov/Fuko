@@ -53,7 +53,7 @@ export function AgeGate() {
                         <h2 className="font-heading text-3xl font-bold mb-4 tracking-tight">Access Restricted</h2>
                         <div className="text-muted mb-10 text-sm font-medium space-y-1">
                             <p>Fuko creates premium blends for adults only.</p>
-                            <p>Verify you are 18+ to enter the archives.</p>
+                            <p>Verify you are 21+ to enter the archives.</p>
                         </div>
 
                         <div className="space-y-4">
@@ -63,7 +63,7 @@ export function AgeGate() {
                                 className="w-full bg-accent hover:bg-accent/90 shadow-lg shadow-accent/20 h-14 text-lg"
                                 onClick={handleConfirm}
                             >
-                                I&apos;m 18+ Enter Site
+                                I&apos;m 21+ Enter Site
                             </Button>
                             <button
                                 onClick={handleExit}
