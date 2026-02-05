@@ -7,8 +7,8 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"
 export function AnnouncementBanner() {
-    // Start with defaults so it doesn't "pop" in or hide if fetch fails
-    const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS)
+    // Start with null to prevent flash of default content
+    const [settings, setSettings] = useState<SiteSettings | null>(null)
     const pathname = usePathname()
 
     useEffect(() => {
