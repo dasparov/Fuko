@@ -119,6 +119,26 @@ export default function ProductPage() {
         }, 800);
     };
 
+    const handleShare = async () => {
+        const shareData = {
+            title: product.name,
+            text: `Check out ${product.name} from Fuko - ${product.description}`,
+            url: window.location.href
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                // Fallback: copy to clipboard
+                await navigator.clipboard.writeText(window.location.href);
+                alert('Link copied to clipboard!');
+            }
+        } catch (err) {
+            console.error('Error sharing:', err);
+        }
+    };
+
     return (
         <main className="min-h-screen bg-background pb-32">
             {/* Header */}
@@ -126,7 +146,7 @@ export default function ProductPage() {
                 <Link href="/" className="rounded-full bg-white/50 p-2 backdrop-blur-md">
                     <ArrowLeft className="h-6 w-6" />
                 </Link>
-                <button className="rounded-full bg-white/50 p-2 backdrop-blur-md">
+                <button onClick={handleShare} className="rounded-full bg-white/50 p-2 backdrop-blur-md">
                     <Share2 className="h-6 w-6" />
                 </button>
             </div>
