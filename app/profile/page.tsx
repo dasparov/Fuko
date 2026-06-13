@@ -12,6 +12,7 @@ import Image from "next/image"
 import { Order, DeliveryAddress } from "@/lib/orders"
 import { getOrdersForUserAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
 import { INDIAN_STATES } from "@/lib/constants"
+import { OrderCardSkeleton, AddressCardSkeleton } from "@/components/ui/Skeletons"
 
 export default function ProfilePage() {
     const { addItem } = useCart()
@@ -30,6 +31,7 @@ export default function ProfilePage() {
 
     // Order History State
     const [activeOrders, setActiveOrders] = useState<Order[]>([])
+    const [profileLoading, setProfileLoading] = useState(true)
 
     // Address State
     interface Address extends DeliveryAddress {
@@ -45,20 +47,24 @@ export default function ProfilePage() {
         let cancelled = false
 
         ;(async () => {
-            // Profile (name, email, phone, addresses) keyed by the Auth.js user id
-            const profile = await getUserProfileAction(userId)
-            if (cancelled || !profile) return
+            try {
+                // Profile (name, email, phone, addresses) keyed by the Auth.js user id
+                const profile = await getUserProfileAction(userId)
+                if (cancelled || !profile) return
 
-            if (profile.name) setUserName(profile.name)
-            setUserEmail(profile.email)
-            setUserPhone(profile.phone)
-            const dbAddresses = profile.addresses.map((addr, idx) => ({ ...addr, id: idx + 1 }))
-            setAddresses(dbAddresses)
+                if (profile.name) setUserName(profile.name)
+                setUserEmail(profile.email)
+                setUserPhone(profile.phone)
+                const dbAddresses = profile.addresses.map((addr, idx) => ({ ...addr, id: idx + 1 }))
+                setAddresses(dbAddresses)
 
-            // Orders are keyed by phone (collected at checkout, stored on users.phone)
-            if (profile.phone) {
-                const userOrders = await getOrdersForUserAction(profile.phone)
-                if (!cancelled) setActiveOrders(userOrders)
+                // Orders are keyed by phone (collected at checkout, stored on users.phone)
+                if (profile.phone) {
+                    const userOrders = await getOrdersForUserAction(profile.phone)
+                    if (!cancelled) setActiveOrders(userOrders)
+                }
+            } finally {
+                if (!cancelled) setProfileLoading(false)
             }
         })()
 
@@ -290,7 +296,9 @@ export default function ProfilePage() {
                         )}
 
                         <div className="space-y-4">
-                            {addresses.map((addr) => (
+                            {profileLoading ? (
+                                Array.from({ length: 2 }).map((_, i) => <AddressCardSkeleton key={i} />)
+                            ) : addresses.map((addr) => (
                                 <div key={addr.id} className={`rounded-3xl p-5 ${addr.type === 'Home' ? 'border-2 border-primary/5 bg-white' : 'border border-muted/10 bg-white/50'}`}>
                                     <div className="flex items-start justify-between">
                                         <div>
@@ -316,7 +324,9 @@ export default function ProfilePage() {
                             <Package className="h-5 w-5" /> Past Orders
                         </h3>
                         <div className="space-y-4">
-                            {activeOrders.length === 0 ? (
+                            {profileLoading ? (
+                                Array.from({ length: 3 }).map((_, i) => <OrderCardSkeleton key={i} />)
+                            ) : activeOrders.length === 0 ? (
                                 <div className="rounded-3xl bg-paper p-8 text-center">
                                     <p className="text-muted mb-4">No orders placed yet.</p>
                                     <Link href="/shop">

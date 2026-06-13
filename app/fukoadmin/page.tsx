@@ -7,6 +7,8 @@ import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
 import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
 import { useState, useEffect, useCallback } from "react"
 import { compressImageToDataUrl } from "@/lib/compress-image"
+import { ProductSkeleton } from "@/components/product/ProductSkeleton"
+import { OrderCardSkeleton } from "@/components/ui/Skeletons"
 import Link from "next/link"
 import {
     Package, Check, Clock, X, ChevronDown, Download, Users, MapPin, RefreshCw,
@@ -35,7 +37,7 @@ export default function AdminDashboard() {
     const [orders, setOrders] = useState<Order[]>([])
     const [products, setProducts] = useState<Product[]>([])
     const [settings, setSettings] = useState<SiteSettings | null>(null)
-    const [, setIsLoading] = useState(true)
+    const [isLoading, setIsLoading] = useState(true)
     const [isRefreshing, setIsRefreshing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
 
@@ -216,45 +218,42 @@ export default function AdminDashboard() {
     }
 
 
-    const loadAllData = () => {
+    const loadAllData = async () => {
         setIsRefreshing(true)
-        // Simulate network delay for better UX
-        setTimeout(async () => {
-            // Load resources independently
-            const [ordersResult, productsResult, settingsResult] = await Promise.allSettled([
-                getOrdersAction(),
-                getAllProductsAdminAction(),
-                getSiteSettingsAction()
-            ]);
+        // Load resources independently
+        const [ordersResult, productsResult, settingsResult] = await Promise.allSettled([
+            getOrdersAction(),
+            getAllProductsAdminAction(),
+            getSiteSettingsAction()
+        ]);
 
-            if (ordersResult.status === "fulfilled") {
-                setOrders(ordersResult.value);
-                calculateAnalytics(ordersResult.value);
-            } else {
-                console.error("Failed to load orders", ordersResult.reason);
-                toast.error("Failed to load orders");
-            }
+        if (ordersResult.status === "fulfilled") {
+            setOrders(ordersResult.value);
+            calculateAnalytics(ordersResult.value);
+        } else {
+            console.error("Failed to load orders", ordersResult.reason);
+            toast.error("Failed to load orders");
+        }
 
-            if (productsResult.status === "fulfilled") {
-                setProducts(productsResult.value);
-            } else {
-                console.error("Failed to load products", productsResult.reason);
-                toast.error("Failed to load products");
-            }
+        if (productsResult.status === "fulfilled") {
+            setProducts(productsResult.value);
+        } else {
+            console.error("Failed to load products", productsResult.reason);
+            toast.error("Failed to load products");
+        }
 
-            if (settingsResult.status === "fulfilled") {
-                setSettings(settingsResult.value);
-            } else {
-                console.error("Failed to load settings", settingsResult.reason);
-                // Fallback to complete defaults if KV fails
-                setSettings(DEFAULT_SETTINGS);
-                toast.error("Using default settings (Load Failed)");
-            }
+        if (settingsResult.status === "fulfilled") {
+            setSettings(settingsResult.value);
+        } else {
+            console.error("Failed to load settings", settingsResult.reason);
+            // Fallback to complete defaults if KV fails
+            setSettings(DEFAULT_SETTINGS);
+            toast.error("Using default settings (Load Failed)");
+        }
 
-            setIsLoading(false)
-            setIsRefreshing(false)
-            toast.success("Dashboard refreshed")
-        }, 800)
+        setIsLoading(false)
+        setIsRefreshing(false)
+        toast.success("Dashboard refreshed")
     }
 
 
@@ -544,7 +543,9 @@ export default function AdminDashboard() {
 
                         {/* Order Cards */}
                         <div className="grid gap-4">
-                            {filteredOrders.length === 0 ? (
+                            {isLoading ? (
+                                Array.from({ length: 4 }).map((_, i) => <OrderCardSkeleton key={i} />)
+                            ) : filteredOrders.length === 0 ? (
                                 <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
                                     <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                                     <p className="text-gray-500 font-bold">No {orderFilter !== "All" ? orderFilter : ""} orders found</p>
@@ -919,7 +920,9 @@ export default function AdminDashboard() {
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {products.map(product => (
+                                {isLoading ? (
+                                    Array.from({ length: 6 }).map((_, i) => <ProductSkeleton key={i} />)
+                                ) : products.map(product => (
                                     <div key={product.id} className={`bg-white rounded-[2rem] border border-gray-200 overflow-hidden group transition-all ${product.isHidden ? 'opacity-50 grayscale' : ''}`}>
                                         <div className="aspect-[4/5] bg-gray-100 relative">
                                             <img src={product.images?.[0] || "/placeholder.png"} className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" alt={product.name} />

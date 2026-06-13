@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { compressImageToDataUrl } from "@/lib/compress-image"
 import { QRCodeSVG } from "qrcode.react"
+import { CheckoutLoadingSkeleton } from "@/components/ui/Skeletons"
 import { toast } from "sonner"
 import { INDIAN_STATES } from "@/lib/constants"
 
@@ -161,17 +162,21 @@ export default function CheckoutPage() {
                 </div>
 
                 <div className="mx-auto w-full max-w-xl px-6">
-                    <h1 className="font-heading text-4xl font-bold mb-2">Sign in to checkout</h1>
-                    <p className="text-muted mb-10 text-lg">Access your saved addresses and keep track of your order.</p>
-
-                    {renderStepIndicator()}
-
                     {status === "unauthenticated" ? (
-                        <AuthPanel callbackUrl="/checkout" />
+                        <>
+                            <h1 className="font-heading text-4xl font-bold mb-2">Sign in to checkout</h1>
+                            <p className="text-muted mb-10 text-lg">Access your saved addresses and keep track of your order.</p>
+                            {renderStepIndicator()}
+                            <AuthPanel callbackUrl="/checkout" />
+                        </>
                     ) : (
-                        // Authenticated but profile is still loading (step hasn't advanced yet),
-                        // or session is still resolving — don't flash the sign-in panel.
-                        <p className="text-center text-sm text-muted">Loading…</p>
+                        // Authenticated but profile is still loading (step hasn't advanced).
+                        // Mirror the address screen it's resolving into — no blank flash.
+                        <>
+                            <h1 className="font-heading text-3xl font-bold mb-2">Checkout</h1>
+                            {renderStepIndicator()}
+                            <CheckoutLoadingSkeleton />
+                        </>
                     )}
                 </div>
             </main>
