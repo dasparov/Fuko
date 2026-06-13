@@ -633,7 +633,7 @@ export default function CheckoutPage() {
             <div className="space-y-4 w-full max-w-xs">
                 <Link href={`/order/${orderId}`} className="block">
                     <Button size="pill" variant="pill" className="w-full">
-                        Track Order
+                        View Order Details
                     </Button>
                 </Link>
                 <Link href="/" className="block">

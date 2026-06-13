@@ -86,6 +86,29 @@ export async function getOrdersForUserAction(phone: string): Promise<Order[]> {
     }
 }
 
+export async function getOrderByIdAction(id: string): Promise<Order | null> {
+    try {
+        const { rows } = await sql`SELECT * FROM orders WHERE id = ${id}`
+        if (rows.length === 0) return null
+        const row: any = rows[0]
+        return {
+            id: row.id,
+            date: row.date,
+            status: row.status as OrderStatus,
+            total: row.total,
+            items: row.items,
+            customerName: row.customer_name,
+            customerPhone: row.customer_phone,
+            deliveryAddress: row.delivery_address,
+            paymentScreenshot: row.payment_screenshot,
+            isPaymentVerified: row.is_payment_verified
+        }
+    } catch (error) {
+        console.error("Postgres Get Order Error:", error)
+        return null
+    }
+}
+
 export async function saveOrderAction(order: Order): Promise<boolean> {
     try {
         await sql`
