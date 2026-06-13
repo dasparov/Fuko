@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SiteSettings } from "@/lib/settings";
 import { getSiteSettingsAction, getProductsAction, Product } from "@/app/actions";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -51,12 +52,23 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative h-[90vh] w-full overflow-hidden bg-paper">
+      <section className="relative h-[90vh] w-full overflow-hidden bg-paper md:h-[70vh]">
+        {/* Mobile: portrait hero (admin-configurable). Hidden on desktop. */}
         <Image
           src={settings?.heroImage || "/hero-bg-v2.jpg"}
           alt="Fuko Tobacco Blend"
           fill
-          className={`object-cover brightness-75 transition-all duration-1000 ease-out ${isHeroLoaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-xl scale-105"
+          className={`object-cover brightness-75 transition-all duration-1000 ease-out md:hidden ${isHeroLoaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-xl scale-105"
+            }`}
+          priority
+          onLoad={() => setIsHeroLoaded(true)}
+        />
+        {/* Desktop: landscape hero. Hidden on mobile. */}
+        <Image
+          src="/hero-landscape.jpg"
+          alt="Fuko Tobacco Blend"
+          fill
+          className={`hidden object-cover brightness-75 transition-all duration-1000 ease-out md:block ${isHeroLoaded ? "opacity-100 blur-0 scale-100" : "opacity-0 blur-xl scale-105"
             }`}
           priority
           onLoad={() => setIsHeroLoaded(true)}
@@ -94,9 +106,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Featured Products (Horizontal Scroll) */}
-      <section id="shop" className="py-12 pl-6">
-        <div className="mb-6 flex items-end justify-between pr-6">
+      <PageContainer>
+      {/* Featured Products — horizontal scroll on mobile, grid on desktop */}
+      <section id="shop" className="py-12 px-6">
+        <div className="mb-6 flex items-end justify-between">
           <h2 className="font-heading text-3xl font-bold text-primary">
             The Archives
           </h2>
@@ -105,11 +118,11 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* Scroll Container */}
-        <div className="flex gap-4 overflow-x-auto pb-8 pr-6 scrollbar-hide">
+        {/* Scroll on mobile / grid on desktop */}
+        <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide md:grid md:grid-cols-3 md:gap-8 md:overflow-visible">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <ProductSkeleton key={i} className="w-[280px]" />
+              <ProductSkeleton key={i} className="w-[280px] md:w-full" />
             ))
           ) : featuredProducts.length === 0 ? (
             <div className="py-10 text-muted italic">No blends currently available.</div>
@@ -123,6 +136,7 @@ export default function Home() {
                 description={product.description}
                 images={product.images}
                 tag={product.tag}
+                className="w-[280px] md:w-full"
               />
             ))
           )}
@@ -133,7 +147,7 @@ export default function Home() {
       <section className="px-6 pb-24">
         <div className="rounded-3xl bg-paper p-8 text-center">
           <h3 className="mb-4 font-heading text-2xl font-bold">The Fuko Archives</h3>
-          <div className="space-y-6">
+          <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0 md:text-left">
             <div>
               <h4 className="font-bold text-accent">Unadulterated Purity</h4>
               <p className="text-sm text-muted">We define ourselves by what we don&apos;t have. No chemicals. No casings. Just leaf.</p>
@@ -203,6 +217,7 @@ export default function Home() {
           )}
         </div>
       </section>
+      </PageContainer>
     </main>
   );
 }

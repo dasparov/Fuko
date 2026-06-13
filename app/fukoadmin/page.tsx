@@ -6,6 +6,7 @@ import { getAllProductsAdminAction, saveProductAction, deleteProductAction, Prod
 import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
 import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
 import { useState, useEffect, useCallback } from "react"
+import { compressImageToDataUrl } from "@/lib/compress-image"
 import Link from "next/link"
 import {
     Package, Check, Clock, X, ChevronDown, Download, Users, MapPin, RefreshCw,
@@ -404,20 +405,22 @@ export default function AdminDashboard() {
     }
 
     // --- Image Helper ---
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, callback: (base64: string) => void) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("File size should be less than 5MB")
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("File size should be less than 10MB")
             return
         }
 
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            callback(reader.result as string)
+        try {
+            // Downsize + re-encode before storing so we never persist giant base64 blobs.
+            const compressed = await compressImageToDataUrl(file, { maxDim: 1400, quality: 0.82 })
+            callback(compressed)
+        } catch {
+            toast.error("Couldn't process that image")
         }
-        reader.readAsDataURL(file)
     }
 
     // Rendering Helpers

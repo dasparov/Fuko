@@ -10,6 +10,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useCart } from "@/context/CartContext";
 import { getProductsAction, Product } from "@/app/actions";
+import { PageContainer } from "@/components/layout/PageContainer";
 
 export default function ProductPage() {
     const params = useParams();
@@ -145,15 +146,18 @@ export default function ProductPage() {
     return (
         <main className="min-h-screen bg-background pb-32">
             {/* Header */}
-            <div className="fixed top-10 z-40 flex w-full items-center justify-between p-6">
-                <Link href="/" className="rounded-full bg-white/50 p-2 backdrop-blur-md">
-                    <ArrowLeft className="h-6 w-6" />
-                </Link>
-                <button onClick={handleShare} className="rounded-full bg-white/50 p-2 backdrop-blur-md">
-                    <Share2 className="h-6 w-6" />
-                </button>
+            <div className="fixed top-10 z-40 w-full p-6">
+                <div className="mx-auto flex w-full max-w-3xl items-center justify-between">
+                    <Link href="/" className="rounded-full bg-white/50 p-2 backdrop-blur-md">
+                        <ArrowLeft className="h-6 w-6" />
+                    </Link>
+                    <button onClick={handleShare} className="rounded-full bg-white/50 p-2 backdrop-blur-md">
+                        <Share2 className="h-6 w-6" />
+                    </button>
+                </div>
             </div>
 
+            <PageContainer width="medium">
             {/* Image Gallery */}
             <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper">
                 <Image
@@ -256,9 +260,11 @@ export default function ProductPage() {
                 </div>
 
             </div>
+            </PageContainer>
 
             {/* Sticky Bottom Bar */}
             <div className="fixed bottom-[84px] left-0 z-40 w-full border-t border-muted/10 bg-background px-6 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] md:bottom-0 md:pb-8">
+                <div className="mx-auto w-full max-w-3xl">
                 <div className="flex items-center gap-4">
                     {/* Quantity Stepper */}
                     <div className="flex items-center gap-4 rounded-pill border border-muted/20 bg-paper px-4 py-3">
@@ -293,6 +299,7 @@ export default function ProductPage() {
                             <>Add - ₹{product.price * quantity}</>
                         )}
                     </Button>
+                </div>
                 </div>
             </div>
         </main >

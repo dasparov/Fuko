@@ -133,6 +133,7 @@ export default function ProfilePage() {
 
     return (
         <main className="min-h-screen bg-background pb-32 pt-8">
+            <div className="mx-auto w-full max-w-3xl">
             {/* Header */}
             <div className="flex items-center justify-between px-6 mb-8">
                 <h1 className="font-heading text-3xl font-bold">My Account</h1>
@@ -416,6 +417,7 @@ export default function ProfilePage() {
                     </button>
                 </div>
             )}
+            </div>
         </main>
     )
 }

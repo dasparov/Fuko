@@ -23,7 +23,7 @@ function LoginInner() {
                 <ArrowLeft className="h-6 w-6" />
             </Link>
 
-            <div className="flex-1">
+            <div className="mx-auto w-full max-w-md flex-1">
                 <h1 className="mb-2 font-heading text-4xl font-bold">Welcome to Fuko</h1>
                 <p className="mb-8 text-muted">
                     Sign in to access your saved blends, addresses, and orders.

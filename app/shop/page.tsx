@@ -6,6 +6,7 @@ import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getProductsAction, Product } from "@/app/actions"
+import { PageContainer } from "@/components/layout/PageContainer"
 
 export default function ShopPage() {
     const [products, setProducts] = useState<Product[]>([])
@@ -27,6 +28,7 @@ export default function ShopPage() {
 
     return (
         <main className="min-h-screen bg-background pb-32 pt-16">
+            <PageContainer>
             {/* Header */}
             <div className="flex items-center justify-between px-6 mb-12">
                 <Link href="/" className="flex items-center gap-2">
@@ -68,6 +70,7 @@ export default function ShopPage() {
                     ))
                 )}
             </div>
+            </PageContainer>
         </main>
     )
 }

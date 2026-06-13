@@ -32,15 +32,17 @@ export default function CartPage() {
 
     return (
         <main className="min-h-screen bg-background pb-32 pt-20">
-            <div className="fixed top-0 z-40 flex w-full items-center justify-between p-6 bg-background/80 backdrop-blur-md">
-                <Link href="/" className="flex items-center gap-2 font-heading text-lg font-bold">
-                    <ArrowLeft className="h-5 w-5" />
-                    Back
-                </Link>
-                <span className="font-heading text-lg font-bold">My Bag</span>
+            <div className="fixed top-0 z-40 w-full p-6 bg-background/80 backdrop-blur-md">
+                <div className="mx-auto flex w-full max-w-3xl items-center justify-between">
+                    <Link href="/" className="flex items-center gap-2 font-heading text-lg font-bold">
+                        <ArrowLeft className="h-5 w-5" />
+                        Back
+                    </Link>
+                    <span className="font-heading text-lg font-bold">My Bag</span>
+                </div>
             </div>
 
-            <div className="px-6 space-y-6">
+            <div className="mx-auto w-full max-w-3xl px-6 space-y-6">
                 {items.map((item) => (
                     <div key={item.id} className="flex gap-4 rounded-3xl bg-paper p-4">
                         <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-white">
@@ -78,15 +80,17 @@ export default function CartPage() {
             </div>
 
             <div className="fixed bottom-20 left-0 w-full border-t border-muted/10 bg-background px-6 py-6">
-                <div className="mb-4 flex items-center justify-between font-heading text-xl font-bold">
-                    <span>Total</span>
-                    <span>₹{cartTotal}</span>
+                <div className="mx-auto w-full max-w-3xl">
+                    <div className="mb-4 flex items-center justify-between font-heading text-xl font-bold">
+                        <span>Total</span>
+                        <span>₹{cartTotal}</span>
+                    </div>
+                    <Link href="/checkout">
+                        <Button size="pill" variant="pill" className="w-full">
+                            Checkout via UPI
+                        </Button>
+                    </Link>
                 </div>
-                <Link href="/checkout">
-                    <Button size="pill" variant="pill" className="w-full">
-                        Checkout via UPI
-                    </Button>
-                </Link>
             </div>
 
         </main>

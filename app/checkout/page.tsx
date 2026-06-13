@@ -11,6 +11,8 @@ import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
+import { compressImageToDataUrl } from "@/lib/compress-image"
+import { QRCodeSVG } from "qrcode.react"
 import { toast } from "sonner"
 import { INDIAN_STATES } from "@/lib/constants"
 
@@ -45,6 +47,16 @@ export default function CheckoutPage() {
 
     // Addresses
     const [addresses, setAddresses] = useState<Address[]>([])
+
+    // iOS has no UPI app-chooser for the upi:// scheme (it gets claimed by a single
+    // app, e.g. WhatsApp). Detect it so we can offer per-app links + a QR instead.
+    const [isIOS, setIsIOS] = useState(false)
+    useEffect(() => {
+        const ua = typeof navigator !== "undefined" ? navigator.userAgent : ""
+        const iOS = /iPad|iPhone|iPod/.test(ua) ||
+            (ua.includes("Macintosh") && typeof document !== "undefined" && "ontouchend" in document)
+        setIsIOS(iOS)
+    }, [])
 
     // Once authenticated, load the profile and route to the right step.
     useEffect(() => {
@@ -87,22 +99,24 @@ export default function CheckoutPage() {
         fileInputRef.current?.click()
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("File size should be less than 5MB")
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("File size should be less than 10MB")
             return
         }
 
         setFileName(file.name)
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            setPaymentScreenshot(reader.result as string)
+        try {
+            // Compress before storing — payment screenshots get saved with the order.
+            const compressed = await compressImageToDataUrl(file, { maxDim: 1400, quality: 0.82 })
+            setPaymentScreenshot(compressed)
             toast.success("Screenshot uploaded successfully")
+        } catch {
+            toast.error("Couldn't process that screenshot")
         }
-        reader.readAsDataURL(file)
     }
 
     const steps = [
@@ -146,7 +160,7 @@ export default function CheckoutPage() {
                     </Link>
                 </div>
 
-                <div className="px-6">
+                <div className="mx-auto w-full max-w-xl px-6">
                     <h1 className="font-heading text-4xl font-bold mb-2">Sign in to checkout</h1>
                     <p className="text-muted mb-10 text-lg">Access your saved addresses and keep track of your order.</p>
 
@@ -211,7 +225,7 @@ export default function CheckoutPage() {
 
         return (
             <main className="min-h-screen bg-background pb-40 pt-8">
-                <div className="px-6 mb-6">
+                <div className="mx-auto w-full max-w-xl px-6 mb-6">
                     <h1 className="font-heading text-4xl font-bold mb-2">About You</h1>
                     <p className="text-muted mb-8 italic">We just need a few details to get your order moving.</p>
 
@@ -315,14 +329,16 @@ export default function CheckoutPage() {
 
                         {/* Submit Button */}
                         <div className="fixed bottom-20 left-0 w-full bg-background px-6 py-8 border-t border-muted/10">
-                            <Button
-                                type="submit"
-                                size="pill"
-                                variant="pill"
-                                className="w-full font-bold h-16 text-lg bg-accent hover:bg-accent/90"
-                            >
-                                Complete Profile <ChevronRight className="ml-2 h-6 w-6" />
-                            </Button>
+                            <div className="mx-auto w-full max-w-xl">
+                                <Button
+                                    type="submit"
+                                    size="pill"
+                                    variant="pill"
+                                    className="w-full font-bold h-16 text-lg bg-accent hover:bg-accent/90"
+                                >
+                                    Complete Profile <ChevronRight className="ml-2 h-6 w-6" />
+                                </Button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -341,7 +357,7 @@ export default function CheckoutPage() {
                     </Link>
                 </div>
 
-                <div className="px-6">
+                <div className="mx-auto w-full max-w-xl px-6">
                     <h1 className="font-heading text-3xl font-bold mb-2">Checkout</h1>
                     {renderStepIndicator()}
 
@@ -381,15 +397,17 @@ export default function CheckoutPage() {
 
                 {/* Continue Button */}
                 <div className="fixed bottom-20 left-0 w-full bg-background px-6 py-6 border-t border-muted/10">
-                    <Button
-                        size="pill"
-                        variant="pill"
-                        className="w-full"
-                        disabled={!selectedAddress}
-                        onClick={() => setStep("payment")}
-                    >
-                        Continue to Payment <ChevronRight className="ml-2 h-5 w-5" />
-                    </Button>
+                    <div className="mx-auto w-full max-w-xl">
+                        <Button
+                            size="pill"
+                            variant="pill"
+                            className="w-full"
+                            disabled={!selectedAddress}
+                            onClick={() => setStep("payment")}
+                        >
+                            Continue to Payment <ChevronRight className="ml-2 h-5 w-5" />
+                        </Button>
+                    </div>
                 </div>
             </main>
         )
@@ -400,7 +418,18 @@ export default function CheckoutPage() {
         const upiId = "fuko@upi"
         const merchantName = "Fuko"
         const transactionNote = `Order Payment`
-        const upiIntentUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${cartTotal}&cu=INR&tn=${encodeURIComponent(transactionNote)}`
+        const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${cartTotal}&cu=INR&tn=${encodeURIComponent(transactionNote)}`
+        const upiIntentUrl = `upi://pay?${upiParams}`
+
+        // iOS per-app deep links (Android uses the generic upi:// chooser instead).
+        // NOTE: these schemes should be verified on a real iPhone with each app
+        // installed — vendors change them occasionally. Easy to tweak here.
+        const iosApps = [
+            { name: "Google Pay", href: `gpay://upi/pay?${upiParams}` },
+            { name: "PhonePe", href: `phonepe://pay?${upiParams}` },
+            { name: "Paytm", href: `paytmmp://pay?${upiParams}` },
+            { name: "BHIM / Other", href: `upi://pay?${upiParams}` },
+        ]
 
         const handlePayNow = () => {
             window.location.href = upiIntentUrl
@@ -451,7 +480,7 @@ export default function CheckoutPage() {
                     </button>
                 </div>
 
-                <div className="px-6">
+                <div className="mx-auto w-full max-w-xl px-6">
                     <h1 className="font-heading text-3xl font-bold mb-2">Payment</h1>
                     {renderStepIndicator()}
 
@@ -482,21 +511,45 @@ export default function CheckoutPage() {
                         <h3 className="font-heading text-lg font-bold mb-2">Pay via UPI</h3>
                         <p className="text-2xl font-heading font-bold text-accent mb-4">₹{cartTotal}</p>
 
-                        <button
-                            onClick={handlePayNow}
-                            className="w-full rounded-2xl bg-gradient-to-r from-[#4B0082] to-[#7B68EE] py-4 px-6 text-white font-bold text-lg shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all mb-4"
-                        >
-                            <span className="flex items-center justify-center gap-2">
-                                <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                </svg>
-                                Pay ₹{cartTotal} Now
-                            </span>
-                        </button>
+                        {isIOS ? (
+                            /* iOS: explicit per-app buttons (no OS-level UPI chooser exists) */
+                            <>
+                                <p className="text-[10px] font-black text-muted uppercase tracking-widest mb-3">Choose your UPI app</p>
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    {iosApps.map(app => (
+                                        <a
+                                            key={app.name}
+                                            href={app.href}
+                                            className="rounded-2xl border border-muted/10 bg-paper py-3 px-4 text-sm font-bold text-primary transition-colors hover:bg-accent hover:text-white"
+                                        >
+                                            {app.name}
+                                        </a>
+                                    ))}
+                                </div>
+                                <p className="text-[10px] text-muted">If an app doesn&apos;t open, it isn&apos;t installed — scan the code below instead.</p>
+                            </>
+                        ) : (
+                            /* Android & others: native UPI app chooser via upi:// */
+                            <button
+                                onClick={handlePayNow}
+                                className="w-full rounded-2xl bg-gradient-to-r from-[#4B0082] to-[#7B68EE] py-4 px-6 text-white font-bold text-lg shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all"
+                            >
+                                <span className="flex items-center justify-center gap-2">
+                                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                    </svg>
+                                    Pay ₹{cartTotal} Now
+                                </span>
+                            </button>
+                        )}
 
-                        <p className="text-xs text-muted">
-                            Opens your UPI app (GPay, PhonePe, Paytm)
-                        </p>
+                        {/* QR fallback — works with any UPI app, on any platform */}
+                        <div className="mt-5 flex flex-col items-center gap-2 border-t border-muted/10 pt-5">
+                            <div className="rounded-2xl border border-muted/10 bg-white p-3">
+                                <QRCodeSVG value={upiIntentUrl} size={160} />
+                            </div>
+                            <p className="text-xs text-muted">Or scan with any UPI app</p>
+                        </div>
                     </div>
 
                     {/* Upload Section */}
