@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 import { CartProvider } from "@/context/CartContext";
 import { AgeGate } from "@/components/ui/AgeGate";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
+import { Providers } from "./providers";
 
 export default function RootLayout({
   children,
@@ -33,12 +34,14 @@ export default function RootLayout({
         suppressHydrationWarning={true}
         className={`${headingFont.variable} ${bodyFont.variable} antialiased pb-20`}
       >
-        <CartProvider>
-          <AgeGate />
-          <AnnouncementBanner />
-          {children}
-          <MobileNav />
-        </CartProvider>
+        <Providers>
+          <CartProvider>
+            <AgeGate />
+            <AnnouncementBanner />
+            {children}
+            <MobileNav />
+          </CartProvider>
+        </Providers>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { sql } from '@vercel/postgres'
 import { SiteSettings, DEFAULT_SETTINGS } from '@/lib/settings'
 import { Order, OrderItem, DeliveryAddress, OrderStatus } from '@/lib/orders'
 import { revalidatePath } from 'next/cache'
+import { auth } from '@/auth'
 
 const SETTINGS_KEY = 'site_settings'
 
@@ -146,19 +147,24 @@ export async function togglePaymentVerificationAction(orderId: string, verified:
 // --- User Actions (Postgres) ---
 
 export interface UserProfile {
-    phoneNumber: string
+    id: string
     name: string
+    email: string
+    phone: string
     addresses: DeliveryAddress[]
 }
 
-export async function getUserProfileAction(phone: string): Promise<UserProfile | null> {
+// Look up a profile by the Auth.js user id (integer PK on the new users table).
+export async function getUserProfileAction(userId: string): Promise<UserProfile | null> {
     try {
-        const { rows } = await sql`SELECT * FROM users WHERE phone_number = ${phone}`
+        const { rows } = await sql`SELECT id, name, email, phone, addresses FROM users WHERE id = ${userId}`
         if (rows.length === 0) return null
 
         return {
-            phoneNumber: rows[0].phone_number,
-            name: rows[0].name,
+            id: String(rows[0].id),
+            name: rows[0].name || "",
+            email: rows[0].email || "",
+            phone: rows[0].phone || "",
             addresses: rows[0].addresses || []
         }
     } catch (error) {
@@ -167,26 +173,28 @@ export async function getUserProfileAction(phone: string): Promise<UserProfile |
     }
 }
 
-export async function updateUserProfileAction(phone: string, data: { name?: string, addresses?: DeliveryAddress[] }): Promise<boolean> {
+// Update the signed-in user's profile. Identity comes from the session (never a
+// client-supplied id). The user row already exists (created at sign-in by the
+// adapter / email-OTP upsert), so this is a partial UPDATE, not an upsert.
+export async function updateUserProfileAction(data: { name?: string, phone?: string, addresses?: DeliveryAddress[] }): Promise<boolean> {
     try {
-        // Upsert user: If exists update, else insert
-        // Note: valid PG syntax for upsert is INSERT ... ON CONFLICT ... DO UPDATE
+        const session = await auth()
+        const userId = (session?.user as { id?: string } | undefined)?.id
+        if (!userId) return false
 
-        // First check if user exists to decide on query structure, or use ON CONFLICT
-        // Since we might update only name OR only addresses, it's safer to read-modify-write or simple upsert logic
+        const existing = await getUserProfileAction(userId)
+        if (!existing) return false
 
-        const existing = await getUserProfileAction(phone);
-
-        const newName = data.name !== undefined ? data.name : (existing?.name || "");
-        const newAddresses = data.addresses !== undefined ? JSON.stringify(data.addresses) : (existing ? JSON.stringify(existing.addresses) : '[]');
+        const newName = data.name !== undefined ? data.name : existing.name
+        const newPhone = data.phone !== undefined ? data.phone : existing.phone
+        const newAddresses = data.addresses !== undefined
+            ? JSON.stringify(data.addresses)
+            : JSON.stringify(existing.addresses)
 
         await sql`
-            INSERT INTO users (phone_number, name, addresses)
-            VALUES (${phone}, ${newName}, ${newAddresses})
-            ON CONFLICT (phone_number) 
-            DO UPDATE SET 
-                name = EXCLUDED.name,
-                addresses = EXCLUDED.addresses
+            UPDATE users
+            SET name = ${newName}, phone = ${newPhone}, addresses = ${newAddresses}
+            WHERE id = ${userId}
         `
         return true
     } catch (error) {
