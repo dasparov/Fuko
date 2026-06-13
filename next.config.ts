@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Orders carry a base64 payment screenshot; the default 1MB Server Action body
+  // limit rejects larger (esp. iOS) images, which previously hung "I've Paid".
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '8mb',
+    },
+  },
   images: {
     remotePatterns: [
       {

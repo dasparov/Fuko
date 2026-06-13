@@ -444,36 +444,42 @@ export default function CheckoutPage() {
             setIsProcessing(true)
 
             setTimeout(async () => {
-                const newOrder: Order = {
-                    id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-                    date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
-                    status: "Processing" as OrderStatus,
-                    items: items,
-                    total: cartTotal,
-                    customerName: userName || "Customer",
-                    customerPhone: userPhone,
-                    deliveryAddress: selectedAddress ? {
-                        type: selectedAddress.type,
-                        line1: selectedAddress.line1,
-                        line2: selectedAddress.line2,
-                        city: selectedAddress.city,
-                        state: selectedAddress.state,
-                        pincode: selectedAddress.pincode
-                    } : undefined,
-                    paymentScreenshot: paymentScreenshot || undefined
+                try {
+                    const newOrder: Order = {
+                        id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+                        date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
+                        status: "Processing" as OrderStatus,
+                        items: items,
+                        total: cartTotal,
+                        customerName: userName || "Customer",
+                        customerPhone: userPhone,
+                        deliveryAddress: selectedAddress ? {
+                            type: selectedAddress.type,
+                            line1: selectedAddress.line1,
+                            line2: selectedAddress.line2,
+                            city: selectedAddress.city,
+                            state: selectedAddress.state,
+                            pincode: selectedAddress.pincode
+                        } : undefined,
+                        paymentScreenshot: paymentScreenshot || undefined
+                    }
+
+                    const success = await saveOrderAction(newOrder)
+
+                    if (success) {
+                        setOrderId(newOrder.id)
+                        clearCart()
+                        setStep("confirmation")
+                    } else {
+                        toast.error("Failed to place order. Please try again.")
+                    }
+                } catch (err) {
+                    // Never leave the button stuck on "Verifying…" — surface the error and let the user retry.
+                    console.error("Place order failed:", err)
+                    toast.error("Couldn't place your order. Please try again.")
+                } finally {
+                    setIsProcessing(false)
                 }
-
-                const success = await saveOrderAction(newOrder)
-
-                if (success) {
-                    setOrderId(newOrder.id)
-                    clearCart()
-                    setStep("confirmation")
-                } else {
-                    toast.error("Failed to place order. Please try again.")
-                }
-
-                setIsProcessing(false)
             }, 1500)
         }
 
