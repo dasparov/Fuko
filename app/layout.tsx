@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Inter } from "next/font/google";
 import { MobileNav } from "@/components/layout/MobileNav";
+import { DesktopNav } from "@/components/layout/DesktopNav";
 import "./globals.css";
 
 const headingFont = Bricolage_Grotesque({
@@ -40,6 +41,7 @@ export default function RootLayout({
             <AnnouncementBanner />
             {children}
             <MobileNav />
+            <DesktopNav />
           </CartProvider>
         </Providers>
       </body>
