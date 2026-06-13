@@ -6,6 +6,10 @@ Mid-migration from **phone + Twilio SMS/WhatsApp OTP** → **Google Sign-In (pri
 
 All code phases are done and verified at build/test level: `tsc` clean, `vitest` 16/16, `next build` green. What remains is user-owned (see "Manual ops" + the env list below): add `AUTH_SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL` to `.env.local` (Postgres/KV/Twilio are already there), run the migration, then run the manual sign-in smoke test. No commit/deploy made — diffs are staged for review.
 
+**⚠️ KNOWN INFRA ISSUE — KV/Redis is dead.** `KV_REST_API_URL` points at `redis-10887.…redislabs.com:10887` which returns **NXDOMAIN** (decommissioned), and it's a raw Redis Cloud host, not the Upstash REST URL `@vercel/kv` expects. This breaks the OTP send rate-limiter (and silently degrades `getSiteSettingsAction`, which falls back to defaults). **Mitigation applied:** `app/api/auth/email-otp/send/route.ts` now **fails open** — if KV errors it logs a warning and lets the send proceed (no throttle while KV is down). **TODO (user):** provision a real Vercel KV/Upstash store → set `KV_REST_API_URL=https://….upstash.io` + `KV_REST_API_TOKEN` locally and in Vercel, so rate-limiting actually works.
+
+**Smoke test status:** email-OTP **send** verified end-to-end this session (route 200, OTP row in `email_otp_codes`, Resend accepted the email to kapil.das@gmail.com via `onboarding@resend.dev` test sender). Still to verify (interactive/browser): entering the code to complete sign-in, and Google sign-in.
+
 **Resolved this session (was a handover contradiction): orders ↔ identity.** Orders stay keyed by `customer_phone` (schema untouched). Checkout onboarding now collects a phone (delivery contact), saves it to `users.phone` AND the order's `customer_phone`. Profile fetches the profile by `users.id` and order history by `users.phone`. So "no phone field in onboarding" was overridden — there IS a phone field, just not used for login.
 
 ---

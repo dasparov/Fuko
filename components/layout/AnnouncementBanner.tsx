@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { getSiteSettingsAction } from "@/app/actions"
-import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
+import { SiteSettings } from "@/lib/settings"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { usePathname } from "next/navigation"

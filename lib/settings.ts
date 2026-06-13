@@ -1,4 +1,6 @@
-"use client"
+// Plain shared module: types + constants (+ unused localStorage helpers).
+// NOT "use client" — `app/actions.ts` (a server action file) imports DEFAULT_SETTINGS
+// and returns it, which fails if this is a client-reference module.
 
 export interface SiteSettings {
     announcementBanner: {

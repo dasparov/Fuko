@@ -17,31 +17,36 @@ type CartContextType = {
     clearCart: () => void
     cartCount: number
     cartTotal: number
+    /** True once the cart has been read from localStorage. Use this before
+     *  acting on an "empty" cart so you don't react to the pre-hydration state. */
+    hydrated: boolean
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
     const [items, setItems] = useState<CartItem[]>([])
+    const [hydrated, setHydrated] = useState(false)
 
-    // Load cart from local storage on mount
+    // Load cart from local storage on mount, then mark as hydrated.
     useEffect(() => {
-        setTimeout(() => {
-            const savedCart = localStorage.getItem("fuko-cart")
-            if (savedCart) {
-                try {
-                    setItems(JSON.parse(savedCart))
-                } catch (e) {
-                    console.error("Failed to parse cart", e)
-                }
+        const savedCart = localStorage.getItem("fuko-cart")
+        if (savedCart) {
+            try {
+                setItems(JSON.parse(savedCart))
+            } catch (e) {
+                console.error("Failed to parse cart", e)
             }
-        }, 0)
+        }
+        setHydrated(true)
     }, [])
 
-    // Save cart to local storage whenever it changes
+    // Persist cart — but only AFTER the initial load, so we never overwrite
+    // saved data with the empty initial state (which wiped the cart on reload).
     useEffect(() => {
+        if (!hydrated) return
         localStorage.setItem("fuko-cart", JSON.stringify(items))
-    }, [items])
+    }, [items, hydrated])
 
     const addItem = (newItem: CartItem) => {
         setItems((prev) => {
@@ -68,7 +73,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <CartContext.Provider
-            value={{ items, addItem, removeItem, clearCart, cartCount, cartTotal }}
+            value={{ items, addItem, removeItem, clearCart, cartCount, cartTotal, hydrated }}
         >
             {children}
         </CartContext.Provider>

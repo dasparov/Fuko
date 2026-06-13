@@ -21,7 +21,7 @@ interface Address extends DeliveryAddress {
 }
 
 export default function CheckoutPage() {
-    const { items, cartTotal, clearCart } = useCart()
+    const { items, cartTotal, clearCart, hydrated } = useCart()
     const router = useRouter()
 
     const { data: session, status } = useSession()
@@ -74,12 +74,14 @@ export default function CheckoutPage() {
         return () => { cancelled = true }
     }, [isLoggedIn, userId])
 
-    // Redirect if cart is empty (except on the final confirmation screen)
+    // Redirect if cart is empty (except on the final confirmation screen).
+    // Wait for the cart to hydrate first, otherwise the brief pre-load empty
+    // state bounces us to /cart on every full page load (e.g. returning from OAuth).
     useEffect(() => {
-        if (items.length === 0 && step !== "confirmation") {
+        if (hydrated && items.length === 0 && step !== "confirmation") {
             router.push("/cart")
         }
-    }, [items, step, router])
+    }, [hydrated, items, step, router])
 
     const handleUploadClick = () => {
         fileInputRef.current?.click()
@@ -150,10 +152,12 @@ export default function CheckoutPage() {
 
                     {renderStepIndicator()}
 
-                    {status === "loading" ? (
-                        <p className="text-center text-sm text-muted">Loading…</p>
-                    ) : (
+                    {status === "unauthenticated" ? (
                         <AuthPanel callbackUrl="/checkout" />
+                    ) : (
+                        // Authenticated but profile is still loading (step hasn't advanced yet),
+                        // or session is still resolving — don't flash the sign-in panel.
+                        <p className="text-center text-sm text-muted">Loading…</p>
                     )}
                 </div>
             </main>

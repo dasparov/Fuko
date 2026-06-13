@@ -63,6 +63,17 @@ describe("POST /api/auth/email-otp/send", () => {
     expect(sendMock).not.toHaveBeenCalled()
   })
 
+  it("fails open (still sends) when KV/rate-limiter is unavailable", async () => {
+    incrMock.mockRejectedValue(new Error("ENOTFOUND redis host"))
+    const { POST } = await import("@/app/api/auth/email-otp/send/route")
+    const res = await POST(postRequest({ email: "user@example.com" }))
+
+    expect(res.status).toBe(200)
+    await expect(res.json()).resolves.toEqual({ success: true })
+    expect(generateMock).toHaveBeenCalledWith("user@example.com")
+    expect(sendMock).toHaveBeenCalledWith("user@example.com", "123456")
+  })
+
   it("returns the same success shape regardless of account existence (no enumeration)", async () => {
     const { POST } = await import("@/app/api/auth/email-otp/send/route")
     const res = await POST(postRequest({ email: "stranger@example.com" }))

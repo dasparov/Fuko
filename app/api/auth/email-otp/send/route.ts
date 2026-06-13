@@ -22,12 +22,20 @@ export async function POST(req: Request) {
   }
 
   // Rate limit: at most MAX_SENDS per email per WINDOW_SECONDS.
+  // Fail open — if KV is unavailable we'd rather let sign-in proceed (logging a
+  // warning) than block all logins. While KV is down there is no send throttle.
   const key = `email-otp:send:${email}`
-  const count = await kv.incr(key)
-  if (count === 1) {
-    await kv.expire(key, WINDOW_SECONDS)
+  let count: number | null = null
+  try {
+    count = await kv.incr(key)
+    if (count === 1) {
+      await kv.expire(key, WINDOW_SECONDS)
+    }
+  } catch (err) {
+    console.warn("email-otp rate-limit unavailable (KV error), proceeding without throttle:", err)
+    count = null
   }
-  if (count > MAX_SENDS) {
+  if (count !== null && count > MAX_SENDS) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
       { status: 429 },
