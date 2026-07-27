@@ -1,90 +1,87 @@
 # FUKO26 — Handover
 
-_Last updated: 2026-06-13_
+_Last updated: 2026-07-27 (evening session)_
 
 ## TL;DR
 
-The **auth migration is complete and live in production** at **https://okfuko.shop**, plus a batch of desktop/perf/payments/UX work shipped this session. Everything below is deployed. The main things left are **verification** (iOS UPI on a real device) and **hardening** (admin auth) — see **Open TODOs**.
+Live at **https://okfuko.shop**. This session shipped: **server-side admin auth**, **paise-fingerprint UPI payment matching + WhatsApp order confirmation**, a **new product (Terracotta Button)**, a full **photography program** (packshots + AI travelogue frames, watermark-free), and a **home-page redesign** (animated archive index + About record over a ghosted Goa engraving). Everything below is deployed and verified except the items in **Open TODOs**.
 
 ---
 
 ## Live / deploy
 
-- **Production:** https://okfuko.shop (canonical) — also serves at `fuko-sigma.vercel.app`.
+- **Production:** https://okfuko.shop (canonical) — also `fuko-sigma.vercel.app`.
 - **Deploy:** push to `main` → Vercel auto-deploys (project `fuko`, team `kapildas-5794s-projects`). Repo: `github.com/dasparov/Fuko`.
-- **Local dev:** `npm run dev` (binds `0.0.0.0`; **open via `localhost:3000`**, not `0.0.0.0`, or Google OAuth breaks).
-- **Tests:** `npm test` (vitest, 17 tests). **Build:** `npm run build`.
+- **Vercel CLI:** authenticated in this environment via `npx vercel` (project linked, `.vercel/` present). `npx vercel env ls`, `npx vercel inspect <url> --wait` work.
+- **Local dev:** `npm run dev` (open via `localhost:3000`, not `0.0.0.0`, or Google OAuth breaks).
+- **Tests:** `npm test` (vitest, 18 tests). **Build:** `npm run build`.
 
 ## Stack
 
-Next.js 16 (Turbopack) · **Auth.js v5** (`next-auth@5.0.0-beta.31`) · **Neon Postgres** (`@vercel/postgres` + `pg`) · **Vercel KV = Upstash Redis** (store `fuko-kv`) · **Resend** (email) · **Twilio** (parked, not active).
+Next.js 16 (Turbopack) · Auth.js v5 · Neon Postgres (`@vercel/postgres` + `pg`) · Vercel KV = Upstash (`fuko-kv`) · Resend. Twilio parked.
 
-## Environment (all set, local `.env.local` + Vercel Production)
+## Environment
+
+All previous vars unchanged (see git history for the old table). Added this session:
 
 | Var | Value / notes |
 |---|---|
-| `AUTH_SECRET` | set (signs JWT sessions) |
-| `AUTH_URL` | `https://okfuko.shop` (prod) / `http://localhost:3000` (local). **Must match the domain** or Google OAuth fails. |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | set; consent screen **published**; redirect URIs registered for okfuko.shop + vercel.app + localhost |
-| `RESEND_API_KEY` | set (send-only key) |
-| `RESEND_FROM_EMAIL` | `Fuko <noreply@send.okfuko.shop>` — verified **subdomain** `send.okfuko.shop` (not the root). The send-only key can't list domains via API. |
-| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | Upstash `fuko-kv` (`https://…upstash.io`). The old `fuko-storage` (Redis Cloud / redislabs) was **deleted** — it was NXDOMAIN/dead. |
-| `POSTGRES_URL` / `DATABASE_URL` | Neon `fuko-db`. Local and prod point at the **same** Neon DB (so the migration applied to prod too). |
-| `TWILIO_*` | kept for the parked phone-OTP flow; not used. |
+| `ADMIN_EMAILS` | `kapil.das@gmail.com` — comma-separated allowlist. Set in **Vercel Production + Preview** and `.env.local`. **Fails closed**: unset = nobody is admin. |
 
 ## Auth + data model
 
-- **Google Sign-In (primary) + email-OTP (fallback)**, Auth.js v5, **JWT** sessions, Postgres adapter. `allowDangerousEmailAccountLinking: true` → one `users` row per email; Google + email-OTP for the same address share it. `session.user.id` is exposed via the jwt/session callbacks in `auth.ts`. **Verified working in prod** (Google sign-in + email-OTP delivery + full checkout → order → profile).
-- **`users`** table (Auth.js shape): `id` SERIAL PK, `name`, `email`, `"emailVerified"`, `image`, `phone`, `addresses` (jsonb), `created_at`. Old phone-OTP table renamed to **`users_parked_phone_otp`** (data preserved).
-- **Orders ↔ identity:** `orders` keyed by `customer_phone` (schema untouched). Checkout onboarding collects a **phone** → saved to `users.phone` AND `order.customer_phone`. **Profile fetches the profile by `users.id`; order history by `users.phone`.** (`app/actions.ts`: `getUserProfileAction(userId)`, `updateUserProfileAction({name?,phone?,addresses?})` reads identity from `auth()`.)
-- **Email-OTP internals** (`lib/email-otp.ts`): 6-digit code, scrypt `salt:derivedHex`, 10-min TTL, 5-attempt cap. The Credentials provider's `authorize` upserts the user (adapter `createUser` is NOT used for this path — keep it that way).
-- **Rate limiter** (`app/api/auth/email-otp/send`): KV `incr`+`expire`, 3/email/15min, **fails open** if KV is down (logs a warning, lets sign-in proceed).
+- Google Sign-In + email-OTP (Auth.js v5, JWT). One `users` row per email. Orders keyed by `customer_phone`; profile by `users.id`. (Unchanged from the auth migration — see git history for details.)
+- **`orders.payment_amount`** (NUMERIC, nullable, added): the exact UPI amount requested (total + unique paise suffix).
+- **`products.sort_order`** (INT, default 100, added): display order. Queries `ORDER BY sort_order, id`; new products land at the end.
 
-## Admin
+## Admin — now actually secured
 
-- **`/fukoadmin`** — single page. Tabs: Orders, Inventory, Analytics, Settings. All backing actions verified working.
-- ⚠️ **Auth is a client-side PIN only** (`2026`, hardcoded in the bundle) + a `sessionStorage` flag. **The admin server actions have NO server-side auth** — anyone can call `getOrdersAction`/`deleteOrderAction`/`saveProductAction` etc. directly. See Open TODO #2.
+- `lib/admin.ts` `isAdmin()`: session email vs `ADMIN_EMAILS` (case-insensitive, fails closed). Tests in `lib/admin.test.ts`.
+- All 8 admin server actions in `app/actions.ts` gated (settings save, orders list/status/delete/verify, admin products list/save/delete) — non-admins get `false`/`[]`.
+- `/fukoadmin` is a server component (`app/fukoadmin/page.tsx`) that redirects non-admins to `/login`; the client UI lives in `AdminDashboard.tsx`. The old client-side PIN (`2026`) is still in there — redundant now, optional cleanup.
 
-## Parked
+## Payments — paise fingerprint + WhatsApp
 
-- **`_parked/phone-otp/`** — the old Twilio SMS/WhatsApp OTP flow (API routes + a UI archive + revival README). Twilio package + `TWILIO_*` env vars kept. `_parked` is excluded in `tsconfig.json`.
+- Checkout adds a random **1–99 paise suffix** to the UPI amount (e.g. ₹550 → ₹550.83), embedded in QR + deep links + shown to the customer, saved as `payment_amount`. **Matching a GPay-feed entry to an order is an exact-amount lookup** — no screenshot needed. Verified end-to-end in prod (test order ORD-8389, since deleted).
+- Admin order cards show the exact amount and a **"Confirm on WhatsApp"** button — `wa.me` link prefilled with order summary (10-digit numbers get `91` prefixed). The thread doubles as the payment-proof channel; screenshot upload remains optional.
+- Twilio WhatsApp API deliberately not used (WABA onboarding + fees overkill at current volume).
 
-## Shipped this session (all deployed)
+## Products (4, in display order)
 
-Commits: `e1aba9f` (auth migration) → `976d469` (image opt) → `3939241` (desktop layout + iOS UPI + upload compression) → `3178653` (skeletons) → `db3ecb4` (desktop nav).
+| # | Product | Price | Gallery (in order) |
+|---|---|---|---|
+| 1 | Light Soils Blend | ₹550 | `/light-soils-pack3.jpg` (subway packshot, bottom-anchored crop) · `/light-soils-dawn2.jpg` (Chamundi dawn) · `/light-soils-road.jpg` (rickshaw road sunrise) |
+| 2 | Turkish Blend | ₹600 | `/turkish-pack2.jpg` (mailbox packshot) · `/turkish-dusk2.jpg` (chai-stop bulb) · `/turkish-wall3.jpg` (wall detail) |
+| 3 | Dark Soils Blend | ₹580 | `/dark-soils-band2.jpg` (band practice, AI) · `/dark-soils-river2.jpg` (Godavari bridge) · `/dark-soils-train3.jpg` (moody train window) |
+| 4 | Terracotta Button | ₹245 | `/terracotta-piano.jpg` · `/terracotta-press.jpg` · `/terracotta-kiln.jpg` · `/terracotta-pouch.jpg` |
 
-1. **Auth migration** (above).
-2. **Desktop-responsive layout** — `components/layout/PageContainer.tsx` centers/caps content; home has a full-bleed responsive hero (landscape desktop / portrait mobile) + product grid; storefront pages centered; sticky CTAs centered. Mobile unchanged (additive at `md:`).
-3. **Image optimization** — every `/public` raster recompressed in place, 8.36 MB → 711 KB.
-4. **Upload compression** — `lib/compress-image.ts` downsizes+re-encodes images in the browser before storing (admin uploads + checkout screenshot), so uploads no longer bloat Postgres.
-5. **iOS UPI fix** — `upi://` has no app chooser on iOS (claimed by WhatsApp). On iOS: per-app deep-link buttons (GPay/PhonePe/Paytm/BHIM, in checkout's `iosApps` array) + a local QR (`qrcode.react`). Android keeps the native `upi://` chooser.
-6. **Skeleton loading** — `components/ui/Skeletons.tsx`; checkout (delivery-address skeleton), admin Orders/Inventory, profile orders/addresses. Removed an artificial 800ms delay in admin `loadAllData`.
-7. **Floating desktop nav** — `components/layout/DesktopNav.tsx`, bottom-center pill (Home/Cart/Account), `md+` only (mobile keeps `MobileNav`).
+- Copy: terroir descriptions per blend (Karnataka light soils / Deccan sun-cured / Godavari fire-cured). **No organic claims** (removed per Kapil). Terracotta copy: handmade, wood-fired kiln, Portuguese-Goa history, wet/dry usage.
+- All AI travelogue images are **Kapil's corrected watermark-free exports** (the generator stamped a sparkle bottom-right; his fixed masters are committed under the original filenames, served under the fresh names above).
 
-## Gotchas (don't relearn these)
+## ⚠️ The image-cache rule (learned the hard way, twice)
 
-- **`AUTH_URL` must match the host** — dev binds `0.0.0.0`, but Google rejects `0.0.0.0` redirect URIs; `AUTH_URL=http://localhost:3000` pins it. Prod = `https://okfuko.shop`.
-- **KV must be the Upstash REST URL** (`*.upstash.io`), not a raw Redis host. `@vercel/kv` needs that. The old store was dead.
-- **Resend test sender** (`onboarding@resend.dev`) only emails the account owner; prod uses the verified `send.okfuko.shop` subdomain.
-- Auth.js v5 env prefix is `AUTH_*` (not `NEXTAUTH_*`).
-- `next-env.d.ts` churns on every build — intentionally left uncommitted.
+`next.config.ts` sets 1-year immutable caching on images. **Never replace an image's content under the same filename** — browser + CDN keep serving the old pixels. Always ship changed images under a NEW filename and update the DB `images` array. (That's why filenames have version suffixes. Old files are left in `/public` — harmless, and Kapil prefers keeping them.)
+
+## Frontend state
+
+- **Home**: hero → ticker → "The Archives" grid (ALL products; horizontal scroll on mobile, 2×2 on `md+`) → animated **archive index** (scroll-reveal rows, self-drawing rules, stamping numerals, rows expand via `+` badge into longer notes, press-bounce) → **About record** (big lede, 2-col text, rotated stamp with thump-in) over a **ghosted Goa fort engraving** (`/goa-fort.jpg`, natural width at section bottom, top-only dissolve mask, 16% opacity multiply — do NOT re-add side vignette or a card behind the text; both were tried and rejected).
+- **Home/shop module-level cache**: products kept in module scope so client-side back-navigation paints instantly (no skeleton reflash).
+- **Product page**: 4:5 centered desktop hero; thin white chevron arrows + white dots (drop shadows, visible on dark frames); touch swipe (instant switch — a drag-follow animation was started and explicitly declined, don't re-add unasked).
+- **DesktopNav** hides on `/cart`, `/checkout`, `/product/*` (bottom CTAs live there).
+
+## Gotchas (keep)
+
+- `AUTH_URL` must match the host; dev = `http://localhost:3000`.
+- KV must be the Upstash REST URL.
+- Auth.js v5 env prefix is `AUTH_*`.
+- `next-env.d.ts` churns on every build — intentionally uncommitted.
+- The ECC GateGuard hook demands stated facts before Bash/Edit calls in this repo's sessions (`ECC_GATEGUARD=off` disables).
 
 ---
 
 ## Open TODOs (next session)
 
-1. **Verify iOS UPI deep links** (UNVERIFIED). On a real iPhone with each app installed, tap GPay/PhonePe/Paytm/BHIM on the checkout payment step. Schemes are guesses (`gpay://upi/pay`, `phonepe://pay`, `paytmmp://pay`) and centralized in the `iosApps` array in `app/checkout/page.tsx`. Fix any that don't open. The QR is the always-works fallback.
-2. **(Low) Pre-existing lint debt.** `npm run build` is clean, but standalone `eslint` flags `any`-types in order/product mapping (`app/actions.ts`, `fukoadmin`) and a `setState`-in-effect in `app/page.tsx` — all pre-existing, optional cleanup.
-3. **(Optional) Remove the client-side PIN** in `app/fukoadmin/AdminDashboard.tsx` — redundant now that the server gates the page, but harmless.
-
-## Done 2026-07-27 (deployed, commit `ea760b6`)
-
-`ADMIN_EMAILS=kapil.das@gmail.com` is set in Vercel Production + Preview (via CLI) and `.env.local`. Verified in prod: unauthenticated `/fukoadmin` → 307 to `/login`. Signed-in admin access still needs a manual click-through.
-
-- **Admin auth hardened** (old TODO #2): `lib/admin.ts` `isAdmin()` checks the Auth.js session email against `ADMIN_EMAILS` (comma-separated, case-insensitive, fails closed if unset). All 8 admin actions in `app/actions.ts` (`saveSiteSettingsAction`, `getOrdersAction`, `updateOrderStatusAction`, `deleteOrderAction`, `togglePaymentVerificationAction`, `getAllProductsAdminAction`, `saveProductAction`, `deleteProductAction`) return `false`/`[]` for non-admins. `/fukoadmin` is now a server component (`page.tsx`) that redirects non-admins to `/login`; the old client page moved to `AdminDashboard.tsx`. Tests: `lib/admin.test.ts`.
-- **Desktop nav overlap fixed** (old TODO #3): the product buy bar (`md:bottom-0`) sat directly under the pill and cart/checkout CTAs (`bottom-20`) touched it — `DesktopNav` now returns `null` on `/cart`, `/checkout`, and `/product/*`.
-- **Dead verify route deleted** (old TODO #4): `app/api/auth/email-otp/verify/` (route + test) removed; only its own test referenced it.
-- **New product photos** for all three blends (`22f0946`): compressed to ~1200px JPEGs in `/public`, DB paths updated.
-- **Terracotta Button product** (₹245, id `terracotta-button`): 6-image gallery (piano packshot → pouch → moulds → press → stamping → kiln), Portuguese-Goa history copy. Home "Archives" now shows ALL products (scroll row on mobile, 2×2 grid `md:grid-cols-2`). Product gallery: thin white prev/next arrows + touch swipe. Landscape sets replaced twice — final: color travelogue frames (dawn/dusk/train/bulb/bridge), 2 images per blend. ⚠️ **Never reuse an image filename** — 1-yr immutable cache serves stale content (bit us twice: dark-soils packshot → `/dark-soils-pack.jpg`, light-soils recrop → `/light-soils-pack.jpg`).
-- **Terroir galleries + copy** (`d1b5204` + DB): each product now has 3 images — packshot + two B&W 4:5 "New Topographics" landscapes of its Indian growing region (AI-generated; sources on Desktop). Longer terroir descriptions applied in DB (Karnataka light soils / Deccan sun-cured / Godavari fire-cured; "incense" removed from Turkish per Kapil). Desktop product hero constrained to centered 4:5 (`80b46c1`); home/shop module-cache to stop skeleton reflash on back-nav (`076dd6b`).
-- **Paise-fingerprint payment matching + WhatsApp confirm** (`f7e4af8`): checkout adds a unique 1–99 paise suffix to the UPI amount (shown to customer, embedded in QR/deep links, saved as nullable `orders.payment_amount`) so the admin matches payments in the GPay feed by exact amount — no screenshot needed (solves the desktop-QR-buyer edge case). Admin order cards show the exact amount and a "Confirm on WhatsApp" button (`wa.me` link prefilled with order summary; the thread doubles as the payment-proof channel). Screenshot upload unchanged and still optional.
+1. **Verify iOS UPI deep links** (still UNVERIFIED, carried over). Real iPhone, each app: GPay/PhonePe/Paytm/BHIM buttons on checkout. Schemes are guesses in the `iosApps` array in `app/checkout/page.tsx`. QR is the fallback.
+2. **(Low) Pre-existing lint debt.** Build is clean; standalone eslint flags `any`-types in order/product mapping and a `setState`-in-effect in `app/page.tsx`.
+3. **(Optional) Remove the client-side PIN** in `app/fukoadmin/AdminDashboard.tsx` — redundant behind the server gate.
+4. **(Optional) Prune unused images** in `/public` (superseded versions kept deliberately; a cleanup pass needs Kapil's sign-off — he rejected one before).
