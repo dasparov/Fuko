@@ -44,13 +44,13 @@ export default function Home() {
       }
 
       if (productsResult.status === "fulfilled") {
-        setFeaturedProducts(productsResult.value.slice(0, 3));
+        setFeaturedProducts(productsResult.value);
       } else {
         console.error("Failed to load products", productsResult.reason);
       }
 
       if (settingsResult.status === "fulfilled" && productsResult.status === "fulfilled") {
-        homeCache = { settings: settingsResult.value, products: productsResult.value.slice(0, 3) };
+        homeCache = { settings: settingsResult.value, products: productsResult.value };
       }
 
       setIsLoading(false);
@@ -128,7 +128,7 @@ export default function Home() {
         </div>
 
         {/* Scroll on mobile / grid on desktop */}
-        <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide md:grid md:grid-cols-3 md:gap-8 md:overflow-visible">
+        <div className="flex gap-4 overflow-x-auto pb-8 scrollbar-hide md:grid md:grid-cols-2 md:gap-8 md:overflow-visible">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <ProductSkeleton key={i} className="w-[280px] md:w-full" />
