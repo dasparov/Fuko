@@ -10,10 +10,15 @@ import { SiteSettings } from "@/lib/settings";
 import { getSiteSettingsAction, getProductsAction, Product } from "@/app/actions";
 import { PageContainer } from "@/components/layout/PageContainer";
 
+// Module-level cache: survives client-side navigation, so returning to the home
+// page paints instantly from the last fetch instead of re-showing skeletons.
+// Refreshed silently on every visit; a full reload starts clean.
+let homeCache: { settings: SiteSettings; products: Product[] } | null = null;
+
 export default function Home() {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState<SiteSettings | null>(homeCache?.settings ?? null);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(homeCache?.products ?? []);
+  const [isLoading, setIsLoading] = useState(!homeCache);
   const [isHeroLoaded, setIsHeroLoaded] = useState(false);
   const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
@@ -42,6 +47,10 @@ export default function Home() {
         setFeaturedProducts(productsResult.value.slice(0, 3));
       } else {
         console.error("Failed to load products", productsResult.reason);
+      }
+
+      if (settingsResult.status === "fulfilled" && productsResult.status === "fulfilled") {
+        homeCache = { settings: settingsResult.value, products: productsResult.value.slice(0, 3) };
       }
 
       setIsLoading(false);

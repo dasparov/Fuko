@@ -8,15 +8,20 @@ import { useEffect, useState } from "react"
 import { getProductsAction, Product } from "@/app/actions"
 import { PageContainer } from "@/components/layout/PageContainer"
 
+// Module-level cache: survives client-side navigation, so returning to the shop
+// paints instantly from the last fetch instead of re-showing skeletons.
+let shopCache: Product[] | null = null
+
 export default function ShopPage() {
-    const [products, setProducts] = useState<Product[]>([])
-    const [isLoading, setIsLoading] = useState(true)
+    const [products, setProducts] = useState<Product[]>(shopCache ?? [])
+    const [isLoading, setIsLoading] = useState(!shopCache)
 
     useEffect(() => {
         async function load() {
             try {
                 const data = await getProductsAction()
                 setProducts(data)
+                shopCache = data
             } catch (err) {
                 console.error("Failed to load products", err)
             } finally {
