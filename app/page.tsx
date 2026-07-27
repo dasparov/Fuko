@@ -138,12 +138,8 @@ function AboutRecord() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0"
         style={{
-          maskImage:
-            "linear-gradient(to bottom, transparent 30%, black 75%, black 94%, transparent), linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 30%, black 75%, black 94%, transparent), linear-gradient(to right, transparent, black 12%, black 88%, transparent)",
-          maskComposite: "intersect",
-          WebkitMaskComposite: "source-in",
+          maskImage: "linear-gradient(to bottom, transparent 30%, black 75%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 75%)",
         }}
       >
         <Image src="/goa-fort.jpg" alt="" width={1400} height={793} className="h-auto w-full opacity-[0.16] mix-blend-multiply" />
