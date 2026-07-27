@@ -60,6 +60,7 @@ export async function getOrdersAction(): Promise<Order[]> {
             customerPhone: row.customer_phone,
             deliveryAddress: row.delivery_address,
             paymentScreenshot: row.payment_screenshot,
+            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
             isPaymentVerified: row.is_payment_verified
         }))
     } catch (error) {
@@ -81,6 +82,7 @@ export async function getOrdersForUserAction(phone: string): Promise<Order[]> {
             customerPhone: row.customer_phone,
             deliveryAddress: row.delivery_address,
             paymentScreenshot: row.payment_screenshot,
+            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
             isPaymentVerified: row.is_payment_verified
         }))
     } catch (error) {
@@ -104,6 +106,7 @@ export async function getOrderByIdAction(id: string): Promise<Order | null> {
             customerPhone: row.customer_phone,
             deliveryAddress: row.delivery_address,
             paymentScreenshot: row.payment_screenshot,
+            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
             isPaymentVerified: row.is_payment_verified
         }
     } catch (error) {
@@ -115,17 +118,18 @@ export async function getOrderByIdAction(id: string): Promise<Order | null> {
 export async function saveOrderAction(order: Order): Promise<boolean> {
     try {
         await sql`
-            INSERT INTO orders (id, date, status, total, items, customer_name, customer_phone, delivery_address, payment_screenshot, is_payment_verified)
+            INSERT INTO orders (id, date, status, total, items, customer_name, customer_phone, delivery_address, payment_screenshot, payment_amount, is_payment_verified)
             VALUES (
-                ${order.id}, 
-                ${order.date}, 
-                ${order.status}, 
-                ${order.total}, 
-                ${JSON.stringify(order.items)}, 
-                ${order.customerName || null}, 
-                ${order.customerPhone || null}, 
-                ${JSON.stringify(order.deliveryAddress || null)}, 
+                ${order.id},
+                ${order.date},
+                ${order.status},
+                ${order.total},
+                ${JSON.stringify(order.items)},
+                ${order.customerName || null},
+                ${order.customerPhone || null},
+                ${JSON.stringify(order.deliveryAddress || null)},
                 ${order.paymentScreenshot || null},
+                ${order.paymentAmount ?? null},
                 ${order.isPaymentVerified || false}
             )
         `

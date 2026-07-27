@@ -52,6 +52,9 @@ export default function CheckoutPage() {
     // iOS has no UPI app-chooser for the upi:// scheme (it gets claimed by a single
     // app, e.g. WhatsApp). Detect it so we can offer per-app links + a QR instead.
     const [isIOS, setIsIOS] = useState(false)
+    // Unique paise suffix (1–99) added to the UPI amount so each payment is
+    // identifiable in the merchant's UPI feed by amount alone (no screenshot needed).
+    const [paiseSuffix] = useState(() => Math.floor(1 + Math.random() * 99))
     useEffect(() => {
         const ua = typeof navigator !== "undefined" ? navigator.userAgent : ""
         const iOS = /iPad|iPhone|iPod/.test(ua) ||
@@ -423,7 +426,8 @@ export default function CheckoutPage() {
         const upiId = "fuko@upi"
         const merchantName = "Fuko"
         const transactionNote = `Order Payment`
-        const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${cartTotal}&cu=INR&tn=${encodeURIComponent(transactionNote)}`
+        const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
+        const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${paymentAmount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`
         const upiIntentUrl = `upi://pay?${upiParams}`
 
         // iOS per-app deep links (Android uses the generic upi:// chooser instead).
@@ -461,7 +465,8 @@ export default function CheckoutPage() {
                             state: selectedAddress.state,
                             pincode: selectedAddress.pincode
                         } : undefined,
-                        paymentScreenshot: paymentScreenshot || undefined
+                        paymentScreenshot: paymentScreenshot || undefined,
+                        paymentAmount: Number(paymentAmount)
                     }
 
                     const success = await saveOrderAction(newOrder)
@@ -520,7 +525,8 @@ export default function CheckoutPage() {
                     {/* UPI Payment Section */}
                     <div className="rounded-3xl bg-white p-6 text-center mb-6 border border-muted/10">
                         <h3 className="font-heading text-lg font-bold mb-2">Pay via UPI</h3>
-                        <p className="text-2xl font-heading font-bold text-accent mb-4">₹{cartTotal}</p>
+                        <p className="text-2xl font-heading font-bold text-accent mb-1">₹{paymentAmount}</p>
+                        <p className="text-[10px] text-muted mb-4">Pay this exact amount — it lets us match your payment instantly</p>
 
                         {isIOS ? (
                             /* iOS: explicit per-app buttons (no OS-level UPI chooser exists) */
@@ -549,7 +555,7 @@ export default function CheckoutPage() {
                                     <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                                     </svg>
-                                    Pay ₹{cartTotal} Now
+                                    Pay ₹{paymentAmount} Now
                                 </span>
                             </button>
                         )}

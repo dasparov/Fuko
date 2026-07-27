@@ -302,6 +302,17 @@ export default function AdminDashboard() {
         }
     }
 
+    // Prefilled WhatsApp confirmation — sent from the admin's own WhatsApp, so the
+    // thread doubles as the channel for payment proof if a payment can't be matched.
+    const whatsappConfirmUrl = (order: Order) => {
+        const digits = (order.customerPhone || "").replace(/\D/g, "")
+        const to = digits.length === 10 ? `91${digits}` : digits
+        const itemsList = order.items.map(i => `${i.name} x${i.quantity}`).join(", ")
+        const amount = order.paymentAmount?.toFixed(2) ?? String(order.total)
+        const text = `Hi ${order.customerName || "there"}! Your Fuko order ${order.id} is confirmed — ${itemsList}, ₹${amount} received ✅ Shipping in 1-2 days.`
+        return `https://wa.me/${to}?text=${encodeURIComponent(text)}`
+    }
+
     const handleDeleteOrder = async (orderId: string) => {
         if (confirm("Are you sure you want to delete this order? This cannot be undone.")) {
             if (await deleteOrderAction(orderId)) {
@@ -569,7 +580,7 @@ export default function AdminDashboard() {
 
                                                 {/* Mobile Price/Status Layout */}
                                                 <div className="sm:hidden text-right">
-                                                    <p className="font-heading font-bold text-lg text-gray-900">₹{order.total}</p>
+                                                    <p className="font-heading font-bold text-lg text-gray-900">₹{order.paymentAmount?.toFixed(2) ?? order.total}</p>
                                                     {order.isPaymentVerified ? (
                                                         <span className="text-[10px] font-black text-green-600 flex items-center justify-end gap-1 uppercase tracking-widest"><Check className="h-3 w-3" /> Verified</span>
                                                     ) : (
@@ -581,7 +592,7 @@ export default function AdminDashboard() {
                                             {/* Desktop Price/Status & Chevron */}
                                             <div className="hidden sm:flex items-center gap-6">
                                                 <div className="text-right">
-                                                    <p className="font-heading font-bold text-xl text-gray-900">₹{order.total}</p>
+                                                    <p className="font-heading font-bold text-xl text-gray-900">₹{order.paymentAmount?.toFixed(2) ?? order.total}</p>
                                                     {order.isPaymentVerified ? (
                                                         <span className="text-[10px] font-black text-green-600 flex items-center justify-end gap-1 uppercase tracking-widest"><Check className="h-3 w-3" /> Verified</span>
                                                     ) : (
@@ -626,6 +637,17 @@ export default function AdminDashboard() {
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
+                                                        {order.customerPhone && (
+                                                            <a
+                                                                href={whatsappConfirmUrl(order)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                onClick={e => e.stopPropagation()}
+                                                                className="w-full sm:w-auto px-4 py-2.5 bg-[#25D366]/10 text-[#128C7E] rounded-xl text-xs font-bold hover:bg-[#25D366]/20 active:scale-95 transition-all text-center"
+                                                            >
+                                                                Confirm on WhatsApp
+                                                            </a>
+                                                        )}
                                                         {!order.isPaymentVerified && (
                                                             <button
                                                                 onClick={(e) => {

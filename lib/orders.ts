@@ -31,6 +31,9 @@ export interface Order {
     customerPhone?: string
     deliveryAddress?: DeliveryAddress
     paymentScreenshot?: string // Base64 or URL
+    // Exact UPI amount requested (total + unique paise suffix) — matches this
+    // order to its payment in the merchant's UPI feed without a screenshot.
+    paymentAmount?: number
     isPaymentVerified?: boolean
 }
 
