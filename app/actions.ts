@@ -272,7 +272,7 @@ async function ensureProductsTable() {
 export async function getProductsAction(): Promise<Product[]> {
     try {
         await ensureProductsTable() // Lazy init
-        const { rows } = await sql`SELECT * FROM products WHERE is_hidden = false`
+        const { rows } = await sql`SELECT * FROM products WHERE is_hidden = false ORDER BY sort_order, id`
         return rows.map((row: any) => ({
             id: row.id,
             name: row.name,
@@ -294,7 +294,7 @@ export async function getAllProductsAdminAction(): Promise<Product[]> {
     if (!(await isAdmin())) return []
     try {
         await ensureProductsTable()
-        const { rows } = await sql`SELECT * FROM products`
+        const { rows } = await sql`SELECT * FROM products ORDER BY sort_order, id`
         return rows.map((row: any) => ({
             id: row.id,
             name: row.name,
