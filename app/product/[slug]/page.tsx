@@ -68,7 +68,7 @@ export default function ProductPage() {
                 </div>
 
                 {/* Image Gallery Skeleton */}
-                <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper">
+                <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper md:mx-auto md:mt-8 md:h-auto md:aspect-[4/5] md:max-w-xl md:rounded-4xl">
                     <Skeleton className="h-full w-full" />
                 </div>
 
@@ -159,7 +159,7 @@ export default function ProductPage() {
 
             <PageContainer width="medium">
             {/* Image Gallery */}
-            <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper">
+            <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper md:mx-auto md:mt-8 md:h-auto md:aspect-[4/5] md:max-w-xl md:rounded-4xl">
                 <Image
                     src={images[activeImage]}
                     alt={product.name}
