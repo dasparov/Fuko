@@ -5,7 +5,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { ProductSkeleton } from "@/components/product/ProductSkeleton";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SiteSettings } from "@/lib/settings";
 import { getSiteSettingsAction, getProductsAction, Product } from "@/app/actions";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -15,14 +15,136 @@ import { PageContainer } from "@/components/layout/PageContainer";
 // Refreshed silently on every visit; a full reload starts clean.
 let homeCache: { settings: SiteSettings; products: Product[] } | null = null;
 
-// The Archives index — numbered like entries in a register.
+// The Archives index — numbered like entries in a register. Each entry opens
+// into a longer archival note (the former long-form About copy, redistributed).
 const VALUES = [
-  { title: "Unadulterated Purity", body: "We define ourselves by what we don't have. No chemicals. No casings. Just leaf." },
-  { title: "Whole-Leaf Quality", body: "Never expanded tobacco or scraps — only prime leaf structure, for a consistent burn." },
-  { title: "Radical Transparency", body: "From the soil to the pouch, the supply chain is open. You know exactly what you're smoking." },
-  { title: "Sovereign Craft", body: "For 500 years India has grown the world's best tobacco. We're keeping the best of the harvest here." },
-  { title: "Terroir First", body: "We don't manufacture flavor; we curate it. Regur Black from Guntur, Kavery Bright from Mysore — the soil does the work." },
+  {
+    title: "Unadulterated Purity",
+    body: "We define ourselves by what we don't have. No chemicals. No casings. Just leaf.",
+    note: "We define our quality by what we leave out. No chemical additives, no expanded fillers, no artificial casings — 100% whole-leaf tobacco, hand-stripped and slow-cured by the Indian sun.",
+  },
+  {
+    title: "Whole-Leaf Quality",
+    body: "Never expanded tobacco or scraps — only prime leaf structure, for a consistent burn.",
+    note: "India has grown world-class tobacco for five centuries, yet the modern smoker is left with industrial commodities. Fuko exists to change that narrative — prime leaf chosen for structure and burn, never scraps.",
+  },
+  {
+    title: "Radical Transparency",
+    body: "From the soil to the pouch, the supply chain is open. You know exactly what you're smoking.",
+    note: "You should know your farmer. Our supply chain is a direct line from the heritage fields of Andhra, Tamil Nadu, and Karnataka straight to your pouch.",
+  },
+  {
+    title: "Sovereign Craft",
+    body: "For 500 years India has grown the world's best tobacco. We're keeping the best of the harvest here.",
+    note: "In the late 1500s the Portuguese anchored in Goa carrying the first tobacco seeds from the New World. From those shores the leaf traveled inland and became part of our agricultural identity. Fuko is rooted in that gateway — India as a destination for craft, not a source of raw material.",
+  },
+  {
+    title: "Terroir First",
+    body: "We don't manufacture flavor; we curate it. Regur Black from Guntur, Kavery Bright from Mysore — the soil does the work.",
+    note: "Rolling your own is a brief pause to engage with a 500-year-old craft that started right here in Goa. Discover your preferred soil, and reclaim the dignity of the leaf.",
+  },
 ];
+
+// Fires once when the element scrolls into view.
+function useInView<T extends HTMLElement>(threshold = 0.15) {
+  const ref = useRef<T>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { threshold }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [threshold]);
+  return { ref, inView };
+}
+
+function IndexRow({ v, i, last, open, onToggle }: { v: (typeof VALUES)[number]; i: number; last: boolean; open: boolean; onToggle: () => void }) {
+  const { ref, inView } = useInView<HTMLDivElement>();
+  const delay = (extra = 0) => ({ transitionDelay: inView ? `${i * 90 + extra}ms` : "0ms" });
+  return (
+    <div
+      ref={ref}
+      className={`relative transition-all duration-700 motion-reduce:transition-none ${inView ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
+      style={delay()}
+    >
+      <button onClick={onToggle} aria-expanded={open} className="group grid w-full gap-y-1.5 py-7 text-left md:grid-cols-[minmax(240px,4fr)_6fr] md:gap-x-8">
+        <div className="flex items-center gap-3.5 transition-transform duration-300 md:group-hover:translate-x-1.5">
+          <span
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[15px] font-black tabular-nums transition-all duration-500 motion-reduce:transition-none ${open ? "bg-accent text-white" : "text-accent"} ${inView ? "scale-100 opacity-100" : "scale-[1.15] opacity-0"}`}
+            style={delay(150)}
+          >
+            {`0${i + 1}`}
+          </span>
+          <h4 className="text-[13px] font-extrabold uppercase leading-snug tracking-[0.2em] transition-all duration-300 group-hover:tracking-[0.24em]">{v.title}</h4>
+        </div>
+        <p className="max-w-[52ch] text-[15px] leading-relaxed text-muted transition-colors duration-300 group-hover:text-primary md:-mt-0.5">{v.body}</p>
+      </button>
+      <div className={`grid transition-[grid-template-rows] duration-500 motion-reduce:transition-none ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className="overflow-hidden">
+          <p className="max-w-[62ch] pb-7 pl-[42px] text-sm leading-relaxed text-muted">{v.note}</p>
+        </div>
+      </div>
+      <span
+        className={`absolute bottom-0 left-0 h-px motion-reduce:transition-none ${last ? "bg-primary" : "bg-primary/10"} transition-[width] duration-700 ease-out`}
+        style={{ width: inView ? "100%" : "0%", ...delay() }}
+      />
+    </div>
+  );
+}
+
+function ArchiveIndex() {
+  const [openEntry, setOpenEntry] = useState<number | null>(null);
+  const { ref, inView } = useInView<HTMLDivElement>(0.1);
+  return (
+    <div className="border-t border-primary pt-4">
+      <div ref={ref} className={`mb-2 flex items-baseline justify-between gap-4 transition-opacity duration-700 motion-reduce:transition-none ${inView ? "opacity-100" : "opacity-0"}`}>
+        <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">The Fuko Archives</h3>
+        <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">Index of principles · No. 01–05</span>
+      </div>
+      {VALUES.map((v, i) => (
+        <IndexRow key={v.title} v={v} i={i} last={i === VALUES.length - 1} open={openEntry === i} onToggle={() => setOpenEntry(openEntry === i ? null : i)} />
+      ))}
+    </div>
+  );
+}
+
+function AboutRecord() {
+  const { ref, inView } = useInView<HTMLDivElement>(0.2);
+  const shown = inView ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0";
+  return (
+    <div ref={ref} className="mt-20 border-t border-primary pt-4">
+      <div className={`mb-2 flex items-baseline justify-between gap-4 transition-opacity duration-700 motion-reduce:transition-none ${inView ? "opacity-100" : "opacity-0"}`}>
+        <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
+        <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">The record · est. notes</span>
+      </div>
+      <h4 className={`mb-7 mt-4 max-w-[22ch] font-heading text-2xl font-bold leading-tight transition-all duration-700 motion-reduce:transition-none md:text-4xl ${shown}`} style={{ textWrap: "balance" }}>
+        The 500-year leaf, <span className="text-accent">finally kept</span> where it was grown.
+      </h4>
+      <div className={`gap-12 text-[15px] leading-relaxed text-muted transition-all delay-150 duration-700 motion-reduce:transition-none md:columns-2 ${shown}`}>
+        <p className="mb-4" style={{ breakInside: "avoid-column" }}>
+          Tobacco reached India on Portuguese ships five centuries ago and never left. The plant found its soils — the light sands of the Mysore plateau, the hard tracts of the Deccan, the black alluvium of the Godavari delta — and became something the world quietly built its blends on.
+        </p>
+        <p style={{ breakInside: "avoid-column" }}>
+          The best leaf was always exported. Fuko exists to keep it. Small lots, whole leaf, no casings, packed by hand in paper and clay — the harvest, held back for the people who grew up next to it.
+        </p>
+      </div>
+      <span
+        className={`mt-10 inline-block rounded-sm border border-accent px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-accent transition-all delay-[400ms] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none ${inView ? "-rotate-2 scale-100 opacity-100" : "rotate-0 scale-[1.3] opacity-0"}`}
+      >
+        Know Smoking · Experience Terroir
+      </span>
+    </div>
+  );
+}
 
 export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(homeCache?.settings ?? null);
@@ -160,48 +282,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Values Section — archive index / ledger */}
+      {/* Values + About — animated archive index / record */}
       <section className="px-6 pb-24">
-        <div className="border-t border-primary pt-4">
-          <div className="mb-2 flex items-baseline justify-between gap-4">
-            <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">The Fuko Archives</h3>
-            <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">Index of principles · No. 01–05</span>
-          </div>
-          {VALUES.map((v, i) => (
-            <div
-              key={v.title}
-              className={`grid gap-y-1.5 py-7 md:grid-cols-[minmax(240px,4fr)_6fr] md:gap-x-8 ${i === VALUES.length - 1 ? "border-b border-primary" : "border-b border-primary/10"}`}
-            >
-              <div className="flex items-baseline gap-3.5">
-                <span className="text-[15px] font-black tabular-nums tracking-wide text-accent">{`0${i + 1}`}</span>
-                <h4 className="text-[13px] font-extrabold uppercase tracking-[0.2em]">{v.title}</h4>
-              </div>
-              <p className="max-w-[52ch] text-[15px] leading-relaxed text-muted md:-mt-0.5">{v.body}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* About Fuko — the record */}
-        <div className="mt-20 border-t border-primary pt-4">
-          <div className="mb-2 flex items-baseline justify-between gap-4">
-            <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
-            <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">The record · est. notes</span>
-          </div>
-          <h4 className="mb-7 mt-4 max-w-[22ch] font-heading text-2xl font-bold leading-tight md:text-4xl" style={{ textWrap: "balance" }}>
-            The 500-year leaf, <span className="text-accent">finally kept</span> where it was grown.
-          </h4>
-          <div className="gap-12 text-[15px] leading-relaxed text-muted md:columns-2">
-            <p className="mb-4" style={{ breakInside: "avoid-column" }}>
-              Tobacco reached India on Portuguese ships five centuries ago and never left. The plant found its soils — the light sands of the Mysore plateau, the hard tracts of the Deccan, the black alluvium of the Godavari delta — and became something the world quietly built its blends on.
-            </p>
-            <p style={{ breakInside: "avoid-column" }}>
-              The best leaf was always exported. Fuko exists to keep it. Small lots, whole leaf, no casings, packed by hand in paper and clay — the harvest, held back for the people who grew up next to it.
-            </p>
-          </div>
-          <span className="mt-10 inline-block -rotate-2 rounded-sm border border-accent px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-accent">
-            Know Smoking · Experience Terroir
-          </span>
-        </div>
+        <ArchiveIndex />
+        <AboutRecord />
       </section>
       </PageContainer>
     </main>
