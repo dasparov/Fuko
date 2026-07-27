@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { getProductsAction, Product } from "@/app/actions";
 import { PageContainer } from "@/components/layout/PageContainer";
@@ -22,6 +22,7 @@ export default function ProductPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [quantity, setQuantity] = useState(1);
     const [activeImage, setActiveImage] = useState(0);
+    const touchStartX = useRef(0);
     const [isAdding, setIsAdding] = useState(false);
     const [isImageLoaded, setIsImageLoaded] = useState(false);
 
@@ -159,7 +160,17 @@ export default function ProductPage() {
 
             <PageContainer width="medium">
             {/* Image Gallery */}
-            <div className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper md:mx-auto md:mt-8 md:h-auto md:aspect-[4/5] md:max-w-xl md:rounded-4xl">
+            <div
+                className="relative h-[60vh] w-full overflow-hidden rounded-b-4xl bg-paper md:mx-auto md:mt-8 md:h-auto md:aspect-[4/5] md:max-w-xl md:rounded-4xl"
+                onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+                onTouchEnd={(e) => {
+                    const dx = e.changedTouches[0].clientX - touchStartX.current;
+                    if (Math.abs(dx) < 50 || images.length < 2) return;
+                    setActiveImage(dx < 0
+                        ? (activeImage + 1) % images.length
+                        : (activeImage - 1 + images.length) % images.length);
+                }}
+            >
                 <Image
                     src={images[activeImage]}
                     alt={product.name}
