@@ -76,7 +76,17 @@ function IndexRow({ v, i, last, open, onToggle }: { v: (typeof VALUES)[number]; 
       className={`relative transition-all duration-700 motion-reduce:transition-none ${inView ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
       style={delay()}
     >
-      <button onClick={onToggle} aria-expanded={open} className="group grid w-full gap-y-1.5 py-7 text-left md:grid-cols-[minmax(240px,4fr)_6fr] md:gap-x-8">
+      <button
+        onClick={onToggle}
+        aria-expanded={open}
+        className="group relative grid w-full gap-y-1.5 py-7 pr-10 text-left transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] active:scale-[0.985] md:grid-cols-[minmax(240px,4fr)_6fr] md:gap-x-8"
+      >
+        <span
+          aria-hidden
+          className={`absolute right-1 top-7 flex h-6 w-6 items-center justify-center rounded-full border border-accent/40 text-[15px] font-black leading-none text-accent transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:border-accent ${open ? "rotate-45 bg-accent text-white" : "rotate-0"}`}
+        >
+          +
+        </span>
         <div className="flex items-center gap-3.5 transition-transform duration-300 md:group-hover:translate-x-1.5">
           <span
             className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[15px] font-black tabular-nums transition-all duration-500 motion-reduce:transition-none ${open ? "bg-accent text-white" : "text-accent"} ${inView ? "scale-100 opacity-100" : "scale-[1.15] opacity-0"}`}
