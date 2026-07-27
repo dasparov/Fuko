@@ -146,7 +146,7 @@ function AboutRecord() {
           WebkitMaskComposite: "source-in",
         }}
       >
-        <Image src="/goa-fort.jpg" alt="" width={1400} height={793} className="h-auto w-full opacity-[0.24] mix-blend-multiply" />
+        <Image src="/goa-fort.jpg" alt="" width={1400} height={793} className="h-auto w-full opacity-[0.16] mix-blend-multiply" />
       </div>
       <div className={`relative mb-2 flex items-baseline justify-between gap-4 transition-opacity duration-700 motion-reduce:transition-none ${inView ? "opacity-100" : "opacity-0"}`}>
         <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
