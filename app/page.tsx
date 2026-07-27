@@ -131,27 +131,34 @@ function AboutRecord() {
   const { ref, inView } = useInView<HTMLDivElement>(0.2);
   const shown = inView ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0";
   return (
-    <div ref={ref} className="mt-20 border-t border-primary pt-4">
-      <div className={`mb-2 flex items-baseline justify-between gap-4 transition-opacity duration-700 motion-reduce:transition-none ${inView ? "opacity-100" : "opacity-0"}`}>
+    <div ref={ref} className="relative mt-20 border-t border-primary pb-32 pt-4">
+      {/* Old engraving of the Goa fort, ghosted into the paper (multiply melts the
+          white away, leaving faint ink lines behind the record). */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 top-24">
+        <Image src="/goa-fort.jpg" alt="" fill className="object-cover object-bottom opacity-[0.16] mix-blend-multiply" />
+      </div>
+      <div className={`relative mb-2 flex items-baseline justify-between gap-4 transition-opacity duration-700 motion-reduce:transition-none ${inView ? "opacity-100" : "opacity-0"}`}>
         <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
         <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">The record · est. notes</span>
       </div>
-      <h4 className={`mb-7 mt-4 max-w-[22ch] font-heading text-2xl font-bold leading-tight transition-all duration-700 motion-reduce:transition-none md:text-4xl ${shown}`} style={{ textWrap: "balance" }}>
-        The 500-year leaf, <span className="text-accent">finally kept</span> where it was grown.
-      </h4>
-      <div className={`gap-12 text-[15px] leading-relaxed text-muted transition-all delay-150 duration-700 motion-reduce:transition-none md:columns-2 ${shown}`}>
-        <p className="mb-4" style={{ breakInside: "avoid-column" }}>
-          Tobacco reached India on Portuguese ships five centuries ago and never left. The plant found its soils — the light sands of the Mysore plateau, the hard tracts of the Deccan, the black alluvium of the Godavari delta — and became something the world quietly built its blends on.
-        </p>
-        <p style={{ breakInside: "avoid-column" }}>
-          The best leaf was always exported. Fuko exists to keep it. Small lots, whole leaf, no casings, packed by hand in paper and clay — the harvest, held back for the people who grew up next to it.
-        </p>
+      <div className="relative mt-4 rounded-3xl bg-background/70 p-6 backdrop-blur-sm md:p-8">
+        <h4 className={`mb-7 max-w-[22ch] font-heading text-2xl font-bold leading-tight transition-all duration-700 motion-reduce:transition-none md:text-4xl ${shown}`} style={{ textWrap: "balance" }}>
+          The 500-year leaf, <span className="text-accent">finally kept</span> where it was grown.
+        </h4>
+        <div className={`gap-12 text-[15px] leading-relaxed text-muted transition-all delay-150 duration-700 motion-reduce:transition-none md:columns-2 ${shown}`}>
+          <p className="mb-4" style={{ breakInside: "avoid-column" }}>
+            Tobacco reached India on Portuguese ships five centuries ago and never left. The plant found its soils — the light sands of the Mysore plateau, the hard tracts of the Deccan, the black alluvium of the Godavari delta — and became something the world quietly built its blends on.
+          </p>
+          <p style={{ breakInside: "avoid-column" }}>
+            The best leaf was always exported. Fuko exists to keep it. Small lots, whole leaf, no casings, packed by hand in paper and clay — the harvest, held back for the people who grew up next to it.
+          </p>
+        </div>
+        <span
+          className={`mt-10 inline-block rounded-sm border border-accent px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-accent transition-all delay-[400ms] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none ${inView ? "-rotate-2 scale-100 opacity-100" : "rotate-0 scale-[1.3] opacity-0"}`}
+        >
+          Know Smoking · Experience Terroir
+        </span>
       </div>
-      <span
-        className={`mt-10 inline-block rounded-sm border border-accent px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-accent transition-all delay-[400ms] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none ${inView ? "-rotate-2 scale-100 opacity-100" : "rotate-0 scale-[1.3] opacity-0"}`}
-      >
-        Know Smoking · Experience Terroir
-      </span>
     </div>
   );
 }
