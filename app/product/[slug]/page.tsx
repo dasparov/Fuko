@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/Button";
-import { ArrowLeft, Check, Minus, Plus, Share2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Minus, Plus, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -171,6 +171,25 @@ export default function ProductPage() {
                     priority
                     onLoad={() => setIsImageLoaded(true)}
                 />
+                {/* Prev/Next arrows (Only if > 1 image) */}
+                {images.length > 1 && (
+                    <>
+                        <button
+                            aria-label="Previous image"
+                            onClick={() => setActiveImage((activeImage - 1 + images.length) % images.length)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary/50 transition-colors hover:text-primary"
+                        >
+                            <ChevronLeft className="h-7 w-7" strokeWidth={1} />
+                        </button>
+                        <button
+                            aria-label="Next image"
+                            onClick={() => setActiveImage((activeImage + 1) % images.length)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary/50 transition-colors hover:text-primary"
+                        >
+                            <ChevronRight className="h-7 w-7" strokeWidth={1} />
+                        </button>
+                    </>
+                )}
                 {/* Pagination Dots (Only if > 1 image) */}
                 {images.length > 1 && (
                     <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
