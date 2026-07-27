@@ -177,14 +177,14 @@ export default function ProductPage() {
                         <button
                             aria-label="Previous image"
                             onClick={() => setActiveImage((activeImage - 1 + images.length) % images.length)}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-primary/50 transition-colors hover:text-primary"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 text-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-colors hover:text-white"
                         >
                             <ChevronLeft className="h-7 w-7" strokeWidth={1} />
                         </button>
                         <button
                             aria-label="Next image"
                             onClick={() => setActiveImage((activeImage + 1) % images.length)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-primary/50 transition-colors hover:text-primary"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-white/80 drop-shadow-[0_1px_3px_rgba(0,0,0,0.6)] transition-colors hover:text-white"
                         >
                             <ChevronRight className="h-7 w-7" strokeWidth={1} />
                         </button>
