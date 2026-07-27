@@ -15,12 +15,20 @@ import { PageContainer } from "@/components/layout/PageContainer";
 // Refreshed silently on every visit; a full reload starts clean.
 let homeCache: { settings: SiteSettings; products: Product[] } | null = null;
 
+// The Archives index — numbered like entries in a register.
+const VALUES = [
+  { title: "Unadulterated Purity", body: "We define ourselves by what we don't have. No chemicals. No casings. Just leaf." },
+  { title: "Whole-Leaf Quality", body: "Never expanded tobacco or scraps — only prime leaf structure, for a consistent burn." },
+  { title: "Radical Transparency", body: "From the soil to the pouch, the supply chain is open. You know exactly what you're smoking." },
+  { title: "Sovereign Craft", body: "For 500 years India has grown the world's best tobacco. We're keeping the best of the harvest here." },
+  { title: "Terroir First", body: "We don't manufacture flavor; we curate it. Regur Black from Guntur, Kavery Bright from Mysore — the soil does the work." },
+];
+
 export default function Home() {
   const [settings, setSettings] = useState<SiteSettings | null>(homeCache?.settings ?? null);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>(homeCache?.products ?? []);
   const [isLoading, setIsLoading] = useState(!homeCache);
   const [isHeroLoaded, setIsHeroLoaded] = useState(false);
-  const [isAboutExpanded, setIsAboutExpanded] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showSubtitle, setShowSubtitle] = useState(false);
 
@@ -152,78 +160,47 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Values Section */}
+      {/* Values Section — archive index / ledger */}
       <section className="px-6 pb-24">
-        <div className="rounded-3xl bg-paper p-8 text-center">
-          <h3 className="mb-4 font-heading text-2xl font-bold">The Fuko Archives</h3>
-          <div className="space-y-6 md:grid md:grid-cols-2 md:gap-6 md:space-y-0 md:text-left">
-            <div>
-              <h4 className="font-bold text-accent">Unadulterated Purity</h4>
-              <p className="text-sm text-muted">We define ourselves by what we don&apos;t have. No chemicals. No casings. Just leaf.</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-accent">Whole-Leaf Quality</h4>
-              <p className="text-sm text-muted">We never use &quot;expanded&quot; tobacco or scraps. Only prime leaf structure for a consistent burn.</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-accent">Radical Transparency</h4>
-              <p className="text-sm text-muted">From the soil to the pouch, our supply chain is open. You know exactly what you&apos;re smoking.</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-accent">Sovereign Craft</h4>
-              <p className="text-sm text-muted">For 500 years, India has grown the world&apos;s best tobacco. We&apos;re finally keeping the best of the harvest right here.</p>
-            </div>
-            <div>
-              <h4 className="font-bold text-accent">Terroir First</h4>
-              <p className="text-sm text-muted">We don&apos;t manufacture flavor; we curate it. Whether it&apos;s the bold Regur Black from Guntur or the Kavery Bright from Mysore—prized for its natural sweetness and silky smoothness—the soil does the work.</p>
-            </div>
+        <div className="border-t border-primary pt-4">
+          <div className="mb-2 flex items-baseline justify-between gap-4">
+            <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">The Fuko Archives</h3>
+            <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">Index of principles · No. 01–05</span>
           </div>
+          {VALUES.map((v, i) => (
+            <div
+              key={v.title}
+              className={`grid gap-y-1.5 py-7 md:grid-cols-[minmax(240px,4fr)_6fr] md:gap-x-8 ${i === VALUES.length - 1 ? "border-b border-primary" : "border-b border-primary/10"}`}
+            >
+              <div className="flex items-baseline gap-3.5">
+                <span className="text-[15px] font-black tabular-nums tracking-wide text-accent">{`0${i + 1}`}</span>
+                <h4 className="text-[13px] font-extrabold uppercase tracking-[0.2em]">{v.title}</h4>
+              </div>
+              <p className="max-w-[52ch] text-[15px] leading-relaxed text-muted md:-mt-0.5">{v.body}</p>
+            </div>
+          ))}
         </div>
 
-        {/* About Fuko Section - Collapsible */}
-        <div className="rounded-3xl bg-paper p-8 text-center mt-8">
-          <button
-            onClick={() => setIsAboutExpanded(!isAboutExpanded)}
-            className="w-full flex items-center justify-center gap-2 font-heading text-2xl font-bold hover:text-accent transition-colors"
-          >
-            About Fuko
-            <svg
-              className={`w-6 h-6 transition-transform ${isAboutExpanded ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isAboutExpanded && (
-            <div className="mt-6">
-              <h4 className="mb-6 font-heading text-xl font-bold text-accent">The 500-Year Leaf</h4>
-              <div className="space-y-6 text-left">
-                <div>
-                  <h5 className="font-bold text-accent mb-2">The Vision</h5>
-                  <p className="text-sm text-muted">Fuko was born from a simple observation: India has grown world-class tobacco for over five centuries, yet the modern smoker is often left with industrial, additive-filled commodities. We decided to change the narrative. Based in Goa, we are curators of the Indian terroir, bringing the raw, unadulterated character of our soil back to the ritual of smoking.</p>
-                </div>
-                <div>
-                  <h5 className="font-bold text-accent mb-2">Our Roots: The Goa Connection</h5>
-                  <p className="text-sm text-muted">The story of Indian tobacco began where we are today. In the late 1500s, the Portuguese anchored in Goa, bringing with them the first tobacco seeds from the New World. From these Goan shores, the leaf traveled inland, adapting to the diverse microclimates of the subcontinent and becoming an integral part of our agricultural identity.</p>
-                  <p className="text-sm text-muted mt-2">Fuko is a post-colonial brand rooted in this gateway. We believe India is no longer just a source of raw materials for global brands. We are a destination for craft. We source our leaves from heritage farms that have perfected their trade over generations, ensuring that the best of the harvest stays exactly where it was grown.</p>
-                </div>
-                <div>
-                  <h5 className="font-bold text-accent mb-2">The Fuko Philosophy</h5>
-                  <p className="text-sm text-muted"><strong>Terroir Over Technology:</strong> We don&apos;t manufacture flavor in a lab. We curate it from the land. Whether it&apos;s the punchy intensity of Guntur&apos;s Regur Black or the smooth, river-fed sweetness of Kaveri Bright from Mysore, we let the soil do the talking.</p>
-                  <p className="text-sm text-muted mt-2"><strong>The Un-Industrialized Purity:</strong> We define our quality by what we leave out. No chemical additives, no expanded fillers, and no artificial casings. Just 100% whole-leaf tobacco, hand-stripped and slow-cured by the Indian sun.</p>
-                  <p className="text-sm text-muted mt-2"><strong>Radical Transparency:</strong> We believe you should know your farmer. Our supply chain is a direct line from the heritage fields of Andhra, Tamil Nadu, and Karnataka straight to your pouch.</p>
-                </div>
-                <div>
-                  <h5 className="font-bold text-accent mb-2">The Ritual</h5>
-                  <p className="text-sm text-muted">Fuko is for those who value the process. Rolling your own is an act of mindfulness—a brief pause to engage with a 500-year-old craft that started right here in Goa. We invite you to explore our archives, discover your preferred soil, and reclaim the dignity of the leaf.</p>
-                  <p className="text-sm text-muted mt-3 text-center font-medium italic">Know Smoking. Experience Terroir.</p>
-                </div>
-              </div>
-            </div>
-          )}
+        {/* About Fuko — the record */}
+        <div className="mt-20 border-t border-primary pt-4">
+          <div className="mb-2 flex items-baseline justify-between gap-4">
+            <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
+            <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">The record · est. notes</span>
+          </div>
+          <h4 className="mb-7 mt-4 max-w-[22ch] font-heading text-2xl font-bold leading-tight md:text-4xl" style={{ textWrap: "balance" }}>
+            The 500-year leaf, <span className="text-accent">finally kept</span> where it was grown.
+          </h4>
+          <div className="gap-12 text-[15px] leading-relaxed text-muted md:columns-2">
+            <p className="mb-4" style={{ breakInside: "avoid-column" }}>
+              Tobacco reached India on Portuguese ships five centuries ago and never left. The plant found its soils — the light sands of the Mysore plateau, the hard tracts of the Deccan, the black alluvium of the Godavari delta — and became something the world quietly built its blends on.
+            </p>
+            <p style={{ breakInside: "avoid-column" }}>
+              The best leaf was always exported. Fuko exists to keep it. Small lots, whole leaf, no casings, packed by hand in paper and clay — the harvest, held back for the people who grew up next to it.
+            </p>
+          </div>
+          <span className="mt-10 inline-block -rotate-2 rounded-sm border border-accent px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.22em] text-accent">
+            Know Smoking · Experience Terroir
+          </span>
         </div>
       </section>
       </PageContainer>
