@@ -67,7 +67,7 @@ function useInView<T extends HTMLElement>(threshold = 0.15) {
   return { ref, inView };
 }
 
-function IndexRow({ v, i, last, open, onToggle }: { v: (typeof VALUES)[number]; i: number; last: boolean; open: boolean; onToggle: () => void }) {
+function IndexRow({ v, i, open, onToggle }: { v: (typeof VALUES)[number]; i: number; open: boolean; onToggle: () => void }) {
   const { ref, inView } = useInView<HTMLDivElement>();
   const delay = (extra = 0) => ({ transitionDelay: inView ? `${i * 90 + extra}ms` : "0ms" });
   return (
@@ -104,7 +104,7 @@ function IndexRow({ v, i, last, open, onToggle }: { v: (typeof VALUES)[number]; 
         </div>
       </div>
       <span
-        className={`absolute bottom-0 left-0 h-px motion-reduce:transition-none ${last ? "bg-primary" : "bg-primary/10"} transition-[width] duration-700 ease-out`}
+        className={`absolute bottom-0 left-0 h-px bg-primary/10 transition-[width] duration-700 ease-out motion-reduce:transition-none`}
         style={{ width: inView ? "100%" : "0%", ...delay() }}
       />
     </div>
@@ -121,7 +121,7 @@ function ArchiveIndex() {
         <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">Index of principles · No. 01–05</span>
       </div>
       {VALUES.map((v, i) => (
-        <IndexRow key={v.title} v={v} i={i} last={i === VALUES.length - 1} open={openEntry === i} onToggle={() => setOpenEntry(openEntry === i ? null : i)} />
+        <IndexRow key={v.title} v={v} i={i} open={openEntry === i} onToggle={() => setOpenEntry(openEntry === i ? null : i)} />
       ))}
     </div>
   );
