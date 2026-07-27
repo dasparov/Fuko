@@ -131,11 +131,11 @@ function AboutRecord() {
   const { ref, inView } = useInView<HTMLDivElement>(0.2);
   const shown = inView ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0";
   return (
-    <div ref={ref} className="relative mt-20 border-t border-primary pb-32 pt-4">
+    <div ref={ref} className="relative mt-20 border-t border-primary pb-80 pt-4">
       {/* Old engraving of the Goa fort, ghosted into the paper (multiply melts the
           white away, leaving faint ink lines behind the record). */}
       <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 top-24">
-        <Image src="/goa-fort.jpg" alt="" fill className="object-cover object-bottom opacity-[0.16] mix-blend-multiply" />
+        <Image src="/goa-fort.jpg" alt="" fill className="object-cover object-[center_25%] opacity-[0.16] mix-blend-multiply" />
       </div>
       <div className={`relative mb-2 flex items-baseline justify-between gap-4 transition-opacity duration-700 motion-reduce:transition-none ${inView ? "opacity-100" : "opacity-0"}`}>
         <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
