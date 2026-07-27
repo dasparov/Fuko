@@ -74,7 +74,12 @@ Commits: `e1aba9f` (auth migration) → `976d469` (image opt) → `3939241` (des
 ## Open TODOs (next session)
 
 1. **Verify iOS UPI deep links** (UNVERIFIED). On a real iPhone with each app installed, tap GPay/PhonePe/Paytm/BHIM on the checkout payment step. Schemes are guesses (`gpay://upi/pay`, `phonepe://pay`, `paytmmp://pay`) and centralized in the `iosApps` array in `app/checkout/page.tsx`. Fix any that don't open. The QR is the always-works fallback.
-2. **Harden admin auth** (security). Gate `/fukoadmin` AND every admin server action with a server-side **admin-email allowlist** via `await auth()` (e.g. `ADMIN_EMAILS` env). Currently it's client-side PIN only + unauthenticated actions = customer PII and order/product mutation are publicly callable.
-3. **Check desktop nav overlap.** The bottom-center floating `DesktopNav` may collide with the sticky bottom CTAs on **cart / checkout / product**. Visually verify on desktop; if it overlaps, nudge it (sit above the CTA) or hide it on those pages.
-4. **Delete the dead verify route.** `app/api/auth/email-otp/verify/route.ts` was Phase-1 scaffolding; the AuthPanel uses **client-side** `signIn("email-otp", …)` instead, so the route is redundant. Confirm nothing calls it, then delete (+ its test).
-5. **(Low) Pre-existing lint debt.** `npm run build` is clean, but standalone `eslint` flags `any`-types in order/product mapping (`app/actions.ts`, `fukoadmin`) and a `setState`-in-effect in `app/page.tsx` — all pre-existing, optional cleanup.
+2. **⚠️ Add `ADMIN_EMAILS` to Vercel Production BEFORE pushing admin-auth work.** Admin auth is now server-side (see below) and **fails closed** — deploying without the env var locks the admin out of `/fukoadmin` and all admin actions. Set `ADMIN_EMAILS=kapil.das@gmail.com` (comma-separated for more) in Vercel → then push. Local `.env.local` already has it.
+3. **(Low) Pre-existing lint debt.** `npm run build` is clean, but standalone `eslint` flags `any`-types in order/product mapping (`app/actions.ts`, `fukoadmin`) and a `setState`-in-effect in `app/page.tsx` — all pre-existing, optional cleanup.
+4. **(Optional) Remove the client-side PIN** in `app/fukoadmin/AdminDashboard.tsx` — redundant now that the server gates the page, but harmless.
+
+## Done 2026-07-27 (uncommitted — see TODO #2 before pushing)
+
+- **Admin auth hardened** (old TODO #2): `lib/admin.ts` `isAdmin()` checks the Auth.js session email against `ADMIN_EMAILS` (comma-separated, case-insensitive, fails closed if unset). All 8 admin actions in `app/actions.ts` (`saveSiteSettingsAction`, `getOrdersAction`, `updateOrderStatusAction`, `deleteOrderAction`, `togglePaymentVerificationAction`, `getAllProductsAdminAction`, `saveProductAction`, `deleteProductAction`) return `false`/`[]` for non-admins. `/fukoadmin` is now a server component (`page.tsx`) that redirects non-admins to `/login`; the old client page moved to `AdminDashboard.tsx`. Tests: `lib/admin.test.ts`.
+- **Desktop nav overlap fixed** (old TODO #3): the product buy bar (`md:bottom-0`) sat directly under the pill and cart/checkout CTAs (`bottom-20`) touched it — `DesktopNav` now returns `null` on `/cart`, `/checkout`, and `/product/*`.
+- **Dead verify route deleted** (old TODO #4): `app/api/auth/email-otp/verify/` (route + test) removed; only its own test referenced it.

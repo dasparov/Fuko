@@ -6,6 +6,7 @@ import { SiteSettings, DEFAULT_SETTINGS } from '@/lib/settings'
 import { Order, OrderItem, DeliveryAddress, OrderStatus } from '@/lib/orders'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
+import { isAdmin } from '@/lib/admin'
 
 const SETTINGS_KEY = 'site_settings'
 
@@ -29,6 +30,7 @@ export async function getSiteSettingsAction(): Promise<SiteSettings> {
 }
 
 export async function saveSiteSettingsAction(settings: SiteSettings): Promise<boolean> {
+    if (!(await isAdmin())) return false
     try {
         await kv.set(SETTINGS_KEY, settings)
         // Revalidate the root layout to update the banner globally
@@ -44,6 +46,7 @@ export async function saveSiteSettingsAction(settings: SiteSettings): Promise<bo
 
 // --- Order Actions (Postgres) ---
 export async function getOrdersAction(): Promise<Order[]> {
+    if (!(await isAdmin())) return []
     try {
         const { rows } = await sql`SELECT * FROM orders ORDER BY created_at DESC`
         // Map database rows to Order interface
@@ -135,6 +138,7 @@ export async function saveOrderAction(order: Order): Promise<boolean> {
 }
 
 export async function updateOrderStatusAction(orderId: string, newStatus: OrderStatus): Promise<boolean> {
+    if (!(await isAdmin())) return false
     try {
         await sql`UPDATE orders SET status = ${newStatus} WHERE id = ${orderId}`
         revalidatePath('/fukoadmin')
@@ -146,6 +150,7 @@ export async function updateOrderStatusAction(orderId: string, newStatus: OrderS
 }
 
 export async function deleteOrderAction(orderId: string): Promise<boolean> {
+    if (!(await isAdmin())) return false
     try {
         await sql`DELETE FROM orders WHERE id = ${orderId}`
         revalidatePath('/fukoadmin')
@@ -157,6 +162,7 @@ export async function deleteOrderAction(orderId: string): Promise<boolean> {
 }
 
 export async function togglePaymentVerificationAction(orderId: string, verified: boolean): Promise<boolean> {
+    if (!(await isAdmin())) return false
     try {
         await sql`UPDATE orders SET is_payment_verified = ${verified} WHERE id = ${orderId}`
         revalidatePath('/fukoadmin')
@@ -281,6 +287,7 @@ export async function getProductsAction(): Promise<Product[]> {
 }
 
 export async function getAllProductsAdminAction(): Promise<Product[]> {
+    if (!(await isAdmin())) return []
     try {
         await ensureProductsTable()
         const { rows } = await sql`SELECT * FROM products`
@@ -302,6 +309,7 @@ export async function getAllProductsAdminAction(): Promise<Product[]> {
 }
 
 export async function saveProductAction(product: Product): Promise<boolean> {
+    if (!(await isAdmin())) return false
     try {
         await ensureProductsTable()
         // Upsert
@@ -340,6 +348,7 @@ export async function saveProductAction(product: Product): Promise<boolean> {
 }
 
 export async function deleteProductAction(id: string): Promise<boolean> {
+    if (!(await isAdmin())) return false
     try {
         await sql`DELETE FROM products WHERE id = ${id}`
         revalidatePath('/')

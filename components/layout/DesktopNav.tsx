@@ -15,6 +15,10 @@ export function DesktopNav() {
     const pathname = usePathname()
     const { cartCount } = useCart()
 
+    // These pages have their own fixed bottom CTA (product buy bar sits at
+    // md:bottom-0, cart/checkout at bottom-20) which the pill would cover.
+    if (pathname === "/cart" || pathname === "/checkout" || pathname.startsWith("/product/")) return null
+
     const navItems = [
         { href: "/", icon: Home, label: "Home" },
         { href: "/cart", icon: ShoppingBag, label: "Cart" },
