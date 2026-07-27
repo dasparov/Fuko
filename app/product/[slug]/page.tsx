@@ -208,7 +208,7 @@ export default function ProductPage() {
                             <button
                                 key={i}
                                 onClick={() => setActiveImage(i)}
-                                className={`h-2 w-2 rounded-full transition-all ${i === activeImage ? "w-6 bg-primary" : "bg-primary/30"}`}
+                                className={`h-2 w-2 rounded-full drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)] transition-all ${i === activeImage ? "w-6 bg-white" : "bg-white/50"}`}
                             />
                         ))}
                     </div>
