@@ -138,8 +138,8 @@ function AboutRecord() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0"
         style={{
-          maskImage: "linear-gradient(to bottom, transparent, black 45%)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent, black 45%)",
+          maskImage: "linear-gradient(to bottom, transparent 30%, black 75%)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent 30%, black 75%)",
         }}
       >
         <Image src="/goa-fort.jpg" alt="" width={1400} height={793} className="h-auto w-full opacity-[0.16] mix-blend-multiply" />
@@ -148,7 +148,7 @@ function AboutRecord() {
         <h3 className="font-heading text-sm font-extrabold uppercase tracking-[0.22em]">About Fuko</h3>
         <span className="whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-muted">The record · est. notes</span>
       </div>
-      <div className="relative mt-4 rounded-3xl bg-background/70 p-6 backdrop-blur-sm md:p-8">
+      <div className="relative mt-4">
         <h4 className={`mb-7 max-w-[22ch] font-heading text-2xl font-bold leading-tight transition-all duration-700 motion-reduce:transition-none md:text-4xl ${shown}`} style={{ textWrap: "balance" }}>
           The 500-year leaf, <span className="text-accent">finally kept</span> where it was grown.
         </h4>
