@@ -436,6 +436,8 @@ export default function CheckoutPage() {
             a.href = canvas.toDataURL("image/png")
             a.download = "fuko-upi-qr.png"
             a.click()
+            setCopied("qr")
+            setTimeout(() => setCopied(null), 2500)
         }
 
         const handleCopy = (text: string, which: string) => {
@@ -555,9 +557,11 @@ export default function CheckoutPage() {
                             </ol>
                             <button
                                 onClick={handleSaveQr}
-                                className="w-full rounded-2xl bg-primary py-3 px-4 text-sm font-bold text-white transition-colors hover:bg-accent"
+                                className="w-full rounded-2xl bg-primary py-3 px-4 text-sm font-bold text-white transition-all active:scale-95 hover:bg-accent"
                             >
-                                Save QR to gallery
+                                {copied === "qr"
+                                    ? <span className="flex items-center justify-center gap-2"><Check className="h-4 w-4" /> Saved — check your gallery</span>
+                                    : "Save QR to gallery"}
                             </button>
                             <div className="mt-3 flex flex-col gap-2">
                                 {[
