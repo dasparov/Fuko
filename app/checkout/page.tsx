@@ -5,7 +5,7 @@ import { AuthPanel } from "@/components/auth/AuthPanel"
 import { useCart } from "@/context/CartContext"
 import { saveOrderAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
 import { Order, OrderStatus, DeliveryAddress } from "@/lib/orders"
-import { ArrowLeft, Check, MapPin, CreditCard, ChevronRight, User, Image as ImageIcon, ChevronDown } from "lucide-react"
+import { ArrowLeft, Check, Copy, MapPin, CreditCard, ChevronRight, User, Image as ImageIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
@@ -559,19 +559,23 @@ export default function CheckoutPage() {
                             >
                                 Save QR to gallery
                             </button>
-                            <div className="mt-3 grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => handleCopy(upiId, "id")}
-                                    className="rounded-2xl border border-muted/10 bg-paper py-3 px-2 text-xs font-bold text-primary break-all transition-colors hover:border-accent"
-                                >
-                                    {copied === "id" ? "Copied!" : `UPI ID · ${upiId}`}
-                                </button>
-                                <button
-                                    onClick={() => handleCopy(paymentAmount, "amt")}
-                                    className="rounded-2xl border border-muted/10 bg-paper py-3 px-2 text-xs font-bold text-primary transition-colors hover:border-accent"
-                                >
-                                    {copied === "amt" ? "Copied!" : `Amount · ₹${paymentAmount}`}
-                                </button>
+                            <div className="mt-3 flex flex-col gap-2">
+                                {[
+                                    { key: "id", label: "UPI ID", value: upiId, display: upiId },
+                                    { key: "amt", label: "Amount", value: paymentAmount, display: `₹${paymentAmount}` },
+                                ].map(row => (
+                                    <button
+                                        key={row.key}
+                                        onClick={() => handleCopy(row.value, row.key)}
+                                        className="flex items-center gap-2 whitespace-nowrap rounded-2xl border border-muted/10 bg-paper py-3 px-4 text-xs transition-colors hover:border-accent"
+                                    >
+                                        <span className="font-black text-muted uppercase tracking-widest text-[10px]">{row.label}</span>
+                                        <span className="ml-auto font-bold text-primary">{row.display}</span>
+                                        {copied === row.key
+                                            ? <Check className="h-4 w-4 shrink-0 text-nature" />
+                                            : <Copy className="h-4 w-4 shrink-0 text-muted" />}
+                                    </button>
+                                ))}
                             </div>
                             <p className="mt-2 text-[10px] text-muted">Or pay manually: copy the ID and the exact amount into your UPI app.</p>
                         </div>
