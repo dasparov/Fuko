@@ -557,7 +557,7 @@ export default function CheckoutPage() {
                             </ol>
                             <button
                                 onClick={handleSaveQr}
-                                className="w-full rounded-2xl bg-primary py-3 px-4 text-sm font-bold text-white transition-all active:scale-95 hover:bg-accent"
+                                className={`w-full rounded-2xl py-3 px-4 text-sm font-bold text-white transition-all active:scale-95 ${copied === "qr" ? "bg-nature" : "bg-primary hover:bg-accent"}`}
                             >
                                 {copied === "qr"
                                     ? <span className="flex items-center justify-center gap-2"><Check className="h-4 w-4" /> Saved — check your gallery</span>
