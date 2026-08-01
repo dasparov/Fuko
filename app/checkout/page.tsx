@@ -423,7 +423,7 @@ export default function CheckoutPage() {
 
     // PAYMENT STEP
     if (step === "payment") {
-        const upiId = "fuko@upi"
+        const upiId = "9535012805@rbl"
         const merchantName = "Fuko"
         const transactionNote = `Order Payment`
         const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
@@ -566,6 +566,7 @@ export default function CheckoutPage() {
                                 <QRCodeSVG value={upiIntentUrl} size={160} />
                             </div>
                             <p className="text-xs text-muted">Or scan with any UPI app</p>
+                            <p className="text-xs text-muted">or pay to <span className="font-bold text-primary select-all">{upiId}</span></p>
                         </div>
                     </div>
 
