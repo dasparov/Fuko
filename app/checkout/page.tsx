@@ -423,7 +423,7 @@ export default function CheckoutPage() {
 
     // PAYMENT STEP
     if (step === "payment") {
-        const upiId = "9535012805@rbl"
+        const upiId = "kapil.das@okicici"
         const merchantName = "Fuko"
         const transactionNote = `Order Payment`
         const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
@@ -563,7 +563,14 @@ export default function CheckoutPage() {
                         {/* QR fallback — works with any UPI app, on any platform */}
                         <div className="mt-5 flex flex-col items-center gap-2 border-t border-muted/10 pt-5">
                             <div className="rounded-2xl border border-muted/10 bg-white p-3">
-                                <QRCodeSVG value={upiIntentUrl} size={160} />
+                                {/* level H (30% recovery) is required — the centre logo
+                                    excavates modules, and L/M would stop scanning. */}
+                                <QRCodeSVG
+                                    value={upiIntentUrl}
+                                    size={200}
+                                    level="H"
+                                    imageSettings={{ src: "/fuko-logo-qr.png", width: 48, height: 30, excavate: true }}
+                                />
                             </div>
                             <p className="text-xs text-muted">Or scan with any UPI app</p>
                             <p className="text-xs text-muted">or pay to <span className="font-bold text-primary select-all">{upiId}</span></p>
