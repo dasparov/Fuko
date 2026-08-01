@@ -603,8 +603,8 @@ export default function CheckoutPage() {
                                 <ImageIcon className={`h-6 w-6 ${paymentScreenshot ? 'text-nature' : 'text-accent'}`} />
                             </div>
                             <div className="flex-1 text-left">
-                                <p className="font-bold text-sm">{paymentScreenshot ? 'Screenshot Uploaded' : 'Upload Screenshot'}</p>
-                                <p className="text-[10px] font-bold text-muted uppercase tracking-wider">{paymentScreenshot ? 'Tap to change file' : 'Tap to select from recent photos'}</p>
+                                <p className="font-bold text-sm">{paymentScreenshot ? 'Screenshot Uploaded' : 'Upload Screenshot (optional)'}</p>
+                                <p className="text-[10px] font-bold text-muted uppercase tracking-wider">{paymentScreenshot ? 'Tap to change file' : 'Not required — we match your payment by its exact amount'}</p>
                             </div>
                         </div>
 
