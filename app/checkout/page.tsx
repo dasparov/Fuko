@@ -533,15 +533,21 @@ export default function CheckoutPage() {
                         {/* Scan-first flow — the only path banks accept for this VPA */}
                         <div className="flex flex-col items-center gap-2">
                             <div className="rounded-2xl border border-muted/10 bg-white p-3">
-                                {/* level H (30% recovery) is required — the centre logo
-                                    excavates modules, and L/M would stop scanning. */}
-                                <QRCodeCanvas
-                                    ref={qrRef}
-                                    value={upiIntentUrl}
-                                    size={220}
-                                    level="H"
-                                    imageSettings={{ src: "/fuko-logo-qr.png", width: 52, height: 33, excavate: true }}
-                                />
+                                {/* No centre logo (Kapil's call) — keeps module density low
+                                    and scanning robust. */}
+                                <QRCodeCanvas value={upiIntentUrl} size={220} level="M" />
+                                {/* Hidden high-res copy for "Save QR" — gallery scanners
+                                    (GPay) reject the small on-screen canvas: it has no
+                                    quiet-zone margin and too few px per module. */}
+                                <div className="hidden">
+                                    <QRCodeCanvas
+                                        ref={qrRef}
+                                        value={upiIntentUrl}
+                                        size={880}
+                                        marginSize={4}
+                                        level="M"
+                                    />
+                                </div>
                             </div>
                             <p className="text-xs text-muted">Scan with any UPI app — the exact amount comes pre-filled</p>
                         </div>
