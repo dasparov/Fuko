@@ -12,7 +12,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { compressImageToDataUrl } from "@/lib/compress-image"
-import { QRCodeSVG } from "qrcode.react"
+import { QRCodeCanvas } from "qrcode.react"
 import { CheckoutLoadingSkeleton } from "@/components/ui/Skeletons"
 import { toast } from "sonner"
 import { INDIAN_STATES } from "@/lib/constants"
@@ -45,22 +45,15 @@ export default function CheckoutPage() {
     const [paymentScreenshot, setPaymentScreenshot] = useState<string | null>(null)
     const [fileName, setFileName] = useState("")
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const qrRef = useRef<HTMLCanvasElement>(null)
 
     // Addresses
     const [addresses, setAddresses] = useState<Address[]>([])
 
-    // iOS has no UPI app-chooser for the upi:// scheme (it gets claimed by a single
-    // app, e.g. WhatsApp). Detect it so we can offer per-app links + a QR instead.
-    const [isIOS, setIsIOS] = useState(false)
     // Unique paise suffix (1–99) added to the UPI amount so each payment is
     // identifiable in the merchant's UPI feed by amount alone (no screenshot needed).
     const [paiseSuffix] = useState(() => Math.floor(1 + Math.random() * 99))
-    useEffect(() => {
-        const ua = typeof navigator !== "undefined" ? navigator.userAgent : ""
-        const iOS = /iPad|iPhone|iPod/.test(ua) ||
-            (ua.includes("Macintosh") && typeof document !== "undefined" && "ontouchend" in document)
-        setIsIOS(iOS)
-    }, [])
+    const [copied, setCopied] = useState<string | null>(null)
 
     // Once authenticated, load the profile and route to the right step.
     useEffect(() => {
@@ -423,25 +416,32 @@ export default function CheckoutPage() {
 
     // PAYMENT STEP
     if (step === "payment") {
-        const upiId = "kapil.das@okicici"
+        const upiId = "goatradingco@rbl"
         const merchantName = "Fuko"
         const transactionNote = `Order Payment`
         const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
         const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${paymentAmount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`
         const upiIntentUrl = `upi://pay?${upiParams}`
 
-        // iOS per-app deep links (Android uses the generic upi:// chooser instead).
-        // NOTE: these schemes should be verified on a real iPhone with each app
-        // installed — vendors change them occasionally. Easy to tweak here.
-        const iosApps = [
-            { name: "Google Pay", href: `gpay://upi/pay?${upiParams}` },
-            { name: "PhonePe", href: `phonepe://pay?${upiParams}` },
-            { name: "Paytm", href: `paytmmp://pay?${upiParams}` },
-            { name: "BHIM / Other", href: `upi://pay?${upiParams}` },
-        ]
+        // Banks accept a personal VPA only via SCANNED payments. Browser-launched
+        // upi:// intents (and gpay://, phonepe://, …) are declined after PIN entry
+        // with a bogus "bank limit" error — verified live 2026-08-01 across five
+        // param variants including no-amount. Do NOT re-add one-tap pay buttons;
+        // only a signed merchant gateway could bring them back, and Kapil has
+        // ruled gateways out. The whole flow is scan-based instead.
+        const handleSaveQr = () => {
+            const canvas = qrRef.current
+            if (!canvas) return
+            const a = document.createElement("a")
+            a.href = canvas.toDataURL("image/png")
+            a.download = "fuko-upi-qr.png"
+            a.click()
+        }
 
-        const handlePayNow = () => {
-            window.location.href = upiIntentUrl
+        const handleCopy = (text: string, which: string) => {
+            navigator.clipboard.writeText(text)
+            setCopied(which)
+            setTimeout(() => setCopied(null), 2000)
         }
 
         const handleConfirmPayment = () => {
@@ -528,52 +528,52 @@ export default function CheckoutPage() {
                         <p className="text-2xl font-heading font-bold text-accent mb-1">₹{paymentAmount}</p>
                         <p className="text-[10px] text-muted mb-4">Pay this exact amount — it lets us match your payment instantly</p>
 
-                        {isIOS ? (
-                            /* iOS: explicit per-app buttons (no OS-level UPI chooser exists) */
-                            <>
-                                <p className="text-[10px] font-black text-muted uppercase tracking-widest mb-3">Choose your UPI app</p>
-                                <div className="grid grid-cols-2 gap-3 mb-3">
-                                    {iosApps.map(app => (
-                                        <a
-                                            key={app.name}
-                                            href={app.href}
-                                            className="rounded-2xl border border-muted/10 bg-paper py-3 px-4 text-sm font-bold text-primary transition-colors hover:bg-accent hover:text-white"
-                                        >
-                                            {app.name}
-                                        </a>
-                                    ))}
-                                </div>
-                                <p className="text-[10px] text-muted">If an app doesn&apos;t open, it isn&apos;t installed — scan the code below instead.</p>
-                            </>
-                        ) : (
-                            /* Android & others: native UPI app chooser via upi:// */
-                            <button
-                                onClick={handlePayNow}
-                                className="w-full rounded-2xl bg-gradient-to-r from-[#4B0082] to-[#7B68EE] py-4 px-6 text-white font-bold text-lg shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all"
-                            >
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                    </svg>
-                                    Pay ₹{paymentAmount} Now
-                                </span>
-                            </button>
-                        )}
-
-                        {/* QR fallback — works with any UPI app, on any platform */}
-                        <div className="mt-5 flex flex-col items-center gap-2 border-t border-muted/10 pt-5">
+                        {/* Scan-first flow — the only path banks accept for this VPA */}
+                        <div className="flex flex-col items-center gap-2">
                             <div className="rounded-2xl border border-muted/10 bg-white p-3">
                                 {/* level H (30% recovery) is required — the centre logo
                                     excavates modules, and L/M would stop scanning. */}
-                                <QRCodeSVG
+                                <QRCodeCanvas
+                                    ref={qrRef}
                                     value={upiIntentUrl}
-                                    size={200}
+                                    size={220}
                                     level="H"
-                                    imageSettings={{ src: "/fuko-logo-qr.png", width: 48, height: 30, excavate: true }}
+                                    imageSettings={{ src: "/fuko-logo-qr.png", width: 52, height: 33, excavate: true }}
                                 />
                             </div>
-                            <p className="text-xs text-muted">Or scan with any UPI app</p>
-                            <p className="text-xs text-muted">or pay to <span className="font-bold text-primary select-all">{upiId}</span></p>
+                            <p className="text-xs text-muted">Scan with any UPI app — the exact amount comes pre-filled</p>
+                        </div>
+
+                        {/* Same-phone flow: a QR can't be scanned off its own screen,
+                            so save it and scan it from the gallery instead. */}
+                        <div className="mt-5 border-t border-muted/10 pt-5 text-left">
+                            <p className="text-[10px] font-black text-muted uppercase tracking-widest mb-2">Paying on this phone?</p>
+                            <ol className="mb-3 ml-4 list-decimal space-y-1 text-xs text-muted">
+                                <li>Save the QR to your gallery</li>
+                                <li>Open your UPI app and tap its scanner</li>
+                                <li>Pick the saved QR from your gallery — the amount fills itself</li>
+                            </ol>
+                            <button
+                                onClick={handleSaveQr}
+                                className="w-full rounded-2xl bg-primary py-3 px-4 text-sm font-bold text-white transition-colors hover:bg-accent"
+                            >
+                                Save QR to gallery
+                            </button>
+                            <div className="mt-3 grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => handleCopy(upiId, "id")}
+                                    className="rounded-2xl border border-muted/10 bg-paper py-3 px-2 text-xs font-bold text-primary break-all transition-colors hover:border-accent"
+                                >
+                                    {copied === "id" ? "Copied!" : `UPI ID · ${upiId}`}
+                                </button>
+                                <button
+                                    onClick={() => handleCopy(paymentAmount, "amt")}
+                                    className="rounded-2xl border border-muted/10 bg-paper py-3 px-2 text-xs font-bold text-primary transition-colors hover:border-accent"
+                                >
+                                    {copied === "amt" ? "Copied!" : `Amount · ₹${paymentAmount}`}
+                                </button>
+                            </div>
+                            <p className="mt-2 text-[10px] text-muted">Or pay manually: copy the ID and the exact amount into your UPI app.</p>
                         </div>
                     </div>
 
