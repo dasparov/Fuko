@@ -12,7 +12,6 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { compressImageToDataUrl } from "@/lib/compress-image"
-import { QRCodeCanvas } from "qrcode.react"
 import { CheckoutLoadingSkeleton } from "@/components/ui/Skeletons"
 import { toast } from "sonner"
 import { INDIAN_STATES } from "@/lib/constants"
@@ -45,7 +44,6 @@ export default function CheckoutPage() {
     const [paymentScreenshot, setPaymentScreenshot] = useState<string | null>(null)
     const [fileName, setFileName] = useState("")
     const fileInputRef = useRef<HTMLInputElement>(null)
-    const qrRef = useRef<HTMLCanvasElement>(null)
 
     // Addresses
     const [addresses, setAddresses] = useState<Address[]>([])
@@ -417,11 +415,12 @@ export default function CheckoutPage() {
     // PAYMENT STEP
     if (step === "payment") {
         const upiId = "goatradingco@rbl"
-        const merchantName = "Fuko"
-        const transactionNote = `Order Payment`
         const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
-        const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(merchantName)}&am=${paymentAmount}&cu=INR&tn=${encodeURIComponent(transactionNote)}`
-        const upiIntentUrl = `upi://pay?${upiParams}`
+        // The QR is the bank-issued image for goatradingco@rbl served verbatim
+        // (public/upi-qr-bank.png, white quiet-zone added). Self-generated QRs
+        // with a baked-in amount got "invalid UPI" on gallery scans — only the
+        // bank's own code is reliably accepted. It carries no amount, so the
+        // customer enters the exact paise-suffixed amount themselves.
 
         // Banks accept a personal VPA only via SCANNED payments. Browser-launched
         // upi:// intents (and gpay://, phonepe://, …) are declined after PIN entry
@@ -430,10 +429,8 @@ export default function CheckoutPage() {
         // only a signed merchant gateway could bring them back, and Kapil has
         // ruled gateways out. The whole flow is scan-based instead.
         const handleSaveQr = () => {
-            const canvas = qrRef.current
-            if (!canvas) return
             const a = document.createElement("a")
-            a.href = canvas.toDataURL("image/png")
+            a.href = "/upi-qr-bank.png"
             a.download = "fuko-upi-qr.png"
             a.click()
             setCopied("qr")
@@ -532,24 +529,13 @@ export default function CheckoutPage() {
 
                         {/* Scan-first flow — the only path banks accept for this VPA */}
                         <div className="flex flex-col items-center gap-2">
-                            <div className="rounded-2xl border border-muted/10 bg-white p-3">
-                                {/* No centre logo (Kapil's call) — keeps module density low
-                                    and scanning robust. */}
-                                <QRCodeCanvas value={upiIntentUrl} size={220} level="M" />
-                                {/* Hidden high-res copy for "Save QR" — gallery scanners
-                                    (GPay) reject the small on-screen canvas: it has no
-                                    quiet-zone margin and too few px per module. */}
-                                <div className="hidden">
-                                    <QRCodeCanvas
-                                        ref={qrRef}
-                                        value={upiIntentUrl}
-                                        size={880}
-                                        marginSize={4}
-                                        level="M"
-                                    />
-                                </div>
+                            <div className="rounded-2xl border border-muted/10 bg-white p-1">
+                                {/* next/image would re-encode; the raw file must reach the
+                                    customer's gallery pixel-perfect, so plain img. */}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="/upi-qr-bank.png" alt="UPI payment QR" className="h-[228px] w-[228px]" />
                             </div>
-                            <p className="text-xs text-muted">Scan with any UPI app — the exact amount comes pre-filled</p>
+                            <p className="text-xs text-muted">Scan with any UPI app, then enter the exact amount shown above</p>
                         </div>
 
                         {/* Same-phone flow: a QR can't be scanned off its own screen,
@@ -559,7 +545,7 @@ export default function CheckoutPage() {
                             <ol className="mb-3 ml-4 list-decimal space-y-1 text-xs text-muted">
                                 <li>Save the QR to your gallery</li>
                                 <li>Open your UPI app and tap its scanner</li>
-                                <li>Pick the saved QR from your gallery — the amount fills itself</li>
+                                <li>Pick the saved QR from your gallery and enter the exact amount</li>
                             </ol>
                             <button
                                 onClick={handleSaveQr}
