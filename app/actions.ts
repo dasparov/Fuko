@@ -10,6 +10,12 @@ import { isAdmin } from '@/lib/admin'
 
 const SETTINGS_KEY = 'site_settings'
 
+// Lets the profile page show the admin link without shipping ADMIN_EMAILS to
+// the browser. Non-admins get false and never see the /fukoadmin path.
+export async function isAdminAction(): Promise<boolean> {
+    return isAdmin()
+}
+
 // --- Settings Actions ---
 export async function getSiteSettingsAction(): Promise<SiteSettings> {
     try {

@@ -10,7 +10,7 @@ import { useState, useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import Image from "next/image"
 import { Order, DeliveryAddress } from "@/lib/orders"
-import { getOrdersForUserAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
+import { getOrdersForUserAction, getUserProfileAction, updateUserProfileAction, isAdminAction } from "@/app/actions"
 import { INDIAN_STATES } from "@/lib/constants"
 import { OrderCardSkeleton, AddressCardSkeleton } from "@/components/ui/Skeletons"
 
@@ -33,6 +33,9 @@ export default function ProfilePage() {
     const [activeOrders, setActiveOrders] = useState<Order[]>([])
     const [profileLoading, setProfileLoading] = useState(true)
 
+    // Server-checked; only admins ever see the dashboard link.
+    const [isAdminUser, setIsAdminUser] = useState(false)
+
     // Address State
     interface Address extends DeliveryAddress {
         id: number
@@ -48,6 +51,9 @@ export default function ProfilePage() {
 
         ;(async () => {
             try {
+                // Ahead of the profile fetch, which bails early when there's no row
+                if (await isAdminAction()) { if (!cancelled) setIsAdminUser(true) }
+
                 // Profile (name, email, phone, addresses) keyed by the Auth.js user id
                 const profile = await getUserProfileAction(userId)
                 if (cancelled || !profile) return
@@ -380,6 +386,21 @@ export default function ProfilePage() {
                         </div>
                     </section>
                 </>
+            )}
+
+            {/* Admin — the only in-app way to reach the dashboard. Without it the
+                path has to be typed from memory, which is how it went missing on
+                a phone with no history to autocomplete from. */}
+            {isAdminUser && (
+                <section className="px-6 mb-8">
+                    <Link
+                        href="/fukoadmin"
+                        className="flex w-full items-center justify-between rounded-2xl bg-primary p-4 font-bold text-white transition-colors hover:bg-accent"
+                    >
+                        <span className="flex items-center gap-2"><Settings className="h-5 w-5" /> Admin Dashboard</span>
+                        <ArrowLeft className="h-4 w-4 rotate-180" />
+                    </Link>
+                </section>
             )}
 
             {/* Support & Legal */}
