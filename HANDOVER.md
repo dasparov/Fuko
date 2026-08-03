@@ -1,87 +1,143 @@
 # FUKO26 — Handover
 
-_Last updated: 2026-07-27 (evening session)_
+_Last updated: 2026-08-03 (evening session)_
 
 ## TL;DR
 
-Live at **https://okfuko.shop**. This session shipped: **server-side admin auth**, **paise-fingerprint UPI payment matching + WhatsApp order confirmation**, a **new product (Terracotta Button)**, a full **photography program** (packshots + AI travelogue frames, watermark-free), and a **home-page redesign** (animated archive index + About record over a ghosted Goa engraving). Everything below is deployed and verified except the items in **Open TODOs**.
+Live at **https://okfuko.shop**. This session: **iOS checkout fixes** (QR save via
+share sheet, clipboard fallback), **admin reachability** (profile link, login
+callback, no more redirect loop), **two admin accounts**, **orders recorded
+before payment** (Awaiting Payment → Processing), and a **full order safety
+net**: every order event appends to a private Google Sheet and every paid order
+emails both admins. Orders table was wiped for a clean slate. **The end-to-end
+phone test of the new checkout has NOT been run yet — it's the first TODO.**
 
 ---
 
 ## Live / deploy
 
-- **Production:** https://okfuko.shop (canonical) — also `fuko-sigma.vercel.app`.
-- **Deploy:** push to `main` → Vercel auto-deploys (project `fuko`, team `kapildas-5794s-projects`). Repo: `github.com/dasparov/Fuko`.
-- **Vercel CLI:** authenticated in this environment via `npx vercel` (project linked, `.vercel/` present). `npx vercel env ls`, `npx vercel inspect <url> --wait` work.
-- **Local dev:** `npm run dev` (open via `localhost:3000`, not `0.0.0.0`, or Google OAuth breaks).
-- **Tests:** `npm test` (vitest, 18 tests). **Build:** `npm run build`.
+- **Production:** https://okfuko.shop — Vercel project `fuko`, team
+  `kapildas-5794s-projects`, repo `github.com/dasparov/Fuko`, push to `main`
+  auto-deploys. Last commit this session: `7f1b74b`.
+- **Vercel CLI:** works via `npx -y vercel@latest …`, already authenticated as
+  `kapildas-5794`, project linked. `env ls/add/rm` all confirmed working.
+- **Local dev:** `npm run dev` (use `localhost:3000`, not `0.0.0.0`, or Google
+  OAuth breaks). **Tests:** `npm test` (vitest, 26 tests). Direct psql to Neon
+  fails from this machine (port 5432 blocked); use a Node script with `pg` +
+  `dangerouslyDisableSandbox` instead — see scratchpad pattern from this session.
 
 ## Stack
 
-Next.js 16 (Turbopack) · Auth.js v5 · Neon Postgres (`@vercel/postgres` + `pg`) · Vercel KV = Upstash (`fuko-kv`) · Resend. Twilio parked.
+Next.js 16 (Turbopack) · Auth.js v5 · Neon Postgres · Vercel KV (Upstash) ·
+Resend · Google Apps Script webhook (order backup). Twilio parked.
 
-## Environment
+## Environment (changed this session)
 
-All previous vars unchanged (see git history for the old table). Added this session:
-
-| Var | Value / notes |
+| Var | Notes |
 |---|---|
-| `ADMIN_EMAILS` | `kapil.das@gmail.com` — comma-separated allowlist. Set in **Vercel Production + Preview** and `.env.local`. **Fails closed**: unset = nobody is admin. |
+| `ADMIN_EMAILS` | Now `kapil.das@gmail.com,tagore4791@gmail.com`. Updated in Vercel **Production + Preview** (via dashboard, values are Sensitive/write-only) and `.env.local`. Fails closed. |
+| `SHEETS_WEBHOOK_URL` | **Production only.** Apps Script `/exec` URL (deployment `AKfycby6gW7IQ…OuLo`). Unset in dev/preview → logging silently off (by design). |
+| `SHEETS_WEBHOOK_SECRET` | **Production only.** Same value is hardcoded in the Apps Script `SECRET` const — that script is the only other place it lives. |
 
-## Auth + data model
+## Order lifecycle (rebuilt this session)
 
-- Google Sign-In + email-OTP (Auth.js v5, JWT). One `users` row per email. Orders keyed by `customer_phone`; profile by `users.id`. (Unchanged from the auth migration — see git history for details.)
-- **`orders.payment_amount`** (NUMERIC, nullable, added): the exact UPI amount requested (total + unique paise suffix).
-- **`products.sort_order`** (INT, default 100, added): display order. Queries `ORDER BY sort_order, id`; new products land at the end.
+The old flow only wrote an order when the buyer tapped confirm — a paid buyer
+who closed the tab left **no record** (a real ₹550.74 payment was lost this
+way; see TODOs). Now:
 
-## Admin — now actually secured
+1. **Payment screen opens** → `saveOrderAction` writes the order with status
+   **`Awaiting Payment`** (new `OrderStatus` member), amount fingerprinted.
+2. **Buyer taps confirm** → `confirmOrderPaymentAction` flips it to
+   `Processing` (scoped: row must be Awaiting Payment AND phone must match the
+   session user). Fallback: if the pending write failed, confirm inserts fresh.
+3. **Revenue**: `countsAsSale` in `lib/orders.ts` (tested) — Awaiting Payment
+   never counts; Processing counts only when payment verified. Admin dashboard
+   and monthly report route through it.
 
-- `lib/admin.ts` `isAdmin()`: session email vs `ADMIN_EMAILS` (case-insensitive, fails closed). Tests in `lib/admin.test.ts`.
-- All 8 admin server actions in `app/actions.ts` gated (settings save, orders list/status/delete/verify, admin products list/save/delete) — non-admins get `false`/`[]`.
-- `/fukoadmin` is a server component (`app/fukoadmin/page.tsx`) that redirects non-admins to `/login`; the client UI lives in `AdminDashboard.tsx`. The old client-side PIN (`2026`) is still in there — redundant now, optional cleanup.
+Admin working rule: an **Awaiting Payment** row + matching credit in the bank
+= real order (set Processing + verify). No credit after a day or two =
+abandoned checkout, delete.
 
-## Payments — paise fingerprint + WhatsApp
+## Order safety net (new — spec in `docs/superpowers/specs/2026-08-03-order-sheet-backup-design.md`)
 
-- Checkout adds a random **1–99 paise suffix** to the UPI amount (e.g. ₹550 → ₹550.83), embedded in QR + deep links + shown to the customer, saved as `payment_amount`. **Matching a GPay-feed entry to an order is an exact-amount lookup** — no screenshot needed. Verified end-to-end in prod (test order ORD-8389, since deleted).
-- Admin order cards show the exact amount and a **"Confirm on WhatsApp"** button — `wa.me` link prefilled with order summary (10-digit numbers get `91` prefixed). The thread doubles as the payment-proof channel; screenshot upload remains optional.
-- Twilio WhatsApp API deliberately not used (WABA onboarding + fees overkill at current volume).
+- `lib/order-log.ts`: builds a 13-cell row (IST timestamps, paise amount,
+  items, name/phone/email/address, markdown `details` cell) and POSTs
+  `{secret, row}` to the webhook. Fired **before** the Postgres insert is
+  awaited; 3s abort, one retry, never throws, no-ops without env.
+- `lib/resend.ts` `sendAdminEmail`: mails everyone in `ADMIN_EMAILS`, never
+  throws. **Every `paid` event emails** (this is the new-order alert); an
+  `awaiting` event emails only if the sheet or DB write failed.
+- **Sheet:** "Fuko Orders" under **kapil.das@gmail.com** (Drive), id
+  `1PG09zPxIkrLVWsiEWv53sw5II_n991EBy4xiFcapT0Y`. Append-only, one row per event.
+- **Webhook:** Apps Script project ("Untitled project") under
+  kapil.das@gmail.com, deployed as web app, execute-as-owner, access Anyone,
+  secret checked in body. Verified live: good secret appends, bad secret doesn't.
+- **Quirk:** Apps Script responds with an HTML redirect page either way, so
+  `res.ok` is true even on secret rejection — failure detection is imperfect.
+  Fine in practice (prod secret is correct), just don't trust the boolean deeply.
+- ⚠️ First attempt was built under kapil@quicksand.co.in and abandoned —
+  **orphan sheet + script exist in that account** (see TODOs). The Chrome
+  profile with the Claude extension for this work is "personal chrome"
+  (kapil.das@gmail.com); the quicksand Chrome must not be used.
 
-## Products (4, in display order)
+## iOS checkout fixes (`ce2b10f`)
 
-| # | Product | Price | Gallery (in order) |
-|---|---|---|---|
-| 1 | Light Soils Blend | ₹550 | `/light-soils-pack3.jpg` (subway packshot, bottom-anchored crop) · `/light-soils-dawn2.jpg` (Chamundi dawn) · `/light-soils-road.jpg` (rickshaw road sunrise) |
-| 2 | Turkish Blend | ₹600 | `/turkish-pack2.jpg` (mailbox packshot) · `/turkish-dusk2.jpg` (chai-stop bulb) · `/turkish-wall3.jpg` (wall detail) |
-| 3 | Dark Soils Blend | ₹580 | `/dark-soils-band2.jpg` (band practice, AI) · `/dark-soils-river2.jpg` (Godavari bridge) · `/dark-soils-train3.jpg` (moody train window) |
-| 4 | Terracotta Button | ₹245 | `/terracotta-piano.jpg` · `/terracotta-press.jpg` · `/terracotta-kiln.jpg` · `/terracotta-pouch.jpg` |
+- **Save QR:** `<a download>` never reaches iOS Photos. Now builds a `File`
+  synchronously (any await first drops user activation → NotAllowedError) and
+  calls `navigator.share({files})` → "Save Image". Falls back to anchor
+  download elsewhere. Dismissing the sheet does not claim "Saved".
+- **Copy:** `lib/copy-text.ts` — clipboard API, then `execCommand` over a real
+  DOM Selection (iOS in-app webviews reject the API). Returns boolean; green
+  check only on true. Used in checkout + product share.
 
-- Copy: terroir descriptions per blend (Karnataka light soils / Deccan sun-cured / Godavari fire-cured). **No organic claims** (removed per Kapil). Terracotta copy: handmade, wood-fired kiln, Portuguese-Goa history, wet/dry usage.
-- All AI travelogue images are **Kapil's corrected watermark-free exports** (the generator stamped a sparkle bottom-right; his fixed masters are committed under the original filenames, served under the fresh names above).
+## Admin access (`fdb7991`, `dce3c32`)
 
-## ⚠️ The image-cache rule (learned the hard way, twice)
+- `/profile` shows an **Admin Dashboard** button, gated by server action
+  `isAdminAction()` (env never reaches the browser).
+- `/fukoadmin` guard: signed-out → `/login?callbackUrl=/fukoadmin`; signed-in
+  non-admin → a "Not an admin account" page naming the session email.
+  **Never** bounce non-admins to /login — the login page redirects
+  authenticated users to callbackUrl, which loops (that was the "flashing").
 
-`next.config.ts` sets 1-year immutable caching on images. **Never replace an image's content under the same filename** — browser + CDN keep serving the old pixels. Always ship changed images under a NEW filename and update the DB `images` array. (That's why filenames have version suffixes. Old files are left in `/public` — harmless, and Kapil prefers keeping them.)
+## Database state
 
-## Frontend state
-
-- **Home**: hero → ticker → "The Archives" grid (ALL products; horizontal scroll on mobile, 2×2 on `md+`) → animated **archive index** (scroll-reveal rows, self-drawing rules, stamping numerals, rows expand via `+` badge into longer notes, press-bounce) → **About record** (big lede, 2-col text, rotated stamp with thump-in) over a **ghosted Goa fort engraving** (`/goa-fort.jpg`, natural width at section bottom, top-only dissolve mask, 16% opacity multiply — do NOT re-add side vignette or a card behind the text; both were tried and rejected).
-- **Home/shop module-level cache**: products kept in module scope so client-side back-navigation paints instantly (no skeleton reflash).
-- **Product page**: 4:5 centered desktop hero; thin white chevron arrows + white dots (drop shadows, visible on dark frames); touch swipe (instant switch — a drag-follow animation was started and explicitly declined, don't re-add unasked).
-- **DesktopNav** hides on `/cart`, `/checkout`, `/product/*` (bottom CTAs live there).
-
-## Gotchas (keep)
-
-- `AUTH_URL` must match the host; dev = `http://localhost:3000`.
-- KV must be the Upstash REST URL.
-- Auth.js v5 env prefix is `AUTH_*`.
-- `next-env.d.ts` churns on every build — intentionally uncommitted.
-- The ECC GateGuard hook demands stated facts before Bash/Edit calls in this repo's sessions (`ECC_GATEGUARD=off` disables).
-
----
+**`orders` table wiped 2026-08-03** for a clean pre-launch slate. The 7 old
+rows (Feb–Jul, all test/family orders, no payment_amounts) are in
+`orders-backup.json` in the session scratchpad —
+`/private/tmp/claude-501/-Users-kapil-Documents-FUKO26/61156bd1-…/scratchpad/`.
+**tmp is not permanent: copy it somewhere safe or accept the loss.**
 
 ## Open TODOs (next session)
 
-1. **Verify iOS UPI deep links** (still UNVERIFIED, carried over). Real iPhone, each app: GPay/PhonePe/Paytm/BHIM buttons on checkout. Schemes are guesses in the `iosApps` array in `app/checkout/page.tsx`. QR is the fallback.
-2. **(Low) Pre-existing lint debt.** Build is clean; standalone eslint flags `any`-types in order/product mapping and a `setState`-in-effect in `app/page.tsx`.
-3. **(Optional) Remove the client-side PIN** in `app/fukoadmin/AdminDashboard.tsx` — redundant behind the server gate.
-4. **(Optional) Prune unused images** in `/public` (superseded versions kept deliberately; a cleanup pass needs Kapil's sign-off — he rejected one before).
+1. **Test checkout end-to-end on the phone** (nothing verified on device yet):
+   reach payment screen → `awaiting` row in sheet; iOS Save-QR share sheet +
+   copy buttons; tap confirm → same row flips (no duplicate), `paid` sheet row,
+   email to both admins; analytics ignores unpaid rows. Also test abandoning
+   at the payment screen.
+2. **Email deliverability:** `RESEND_FROM_EMAIL` uses sender
+   `noreply@send.okfuko.shop` — confirm both gmail inboxes actually receive
+   the paid-order mail (test-mode senders may only deliver to the account
+   owner). If not: verify the domain in Resend.
+3. **Recover the ₹550.74 order:** tagore4791@gmail.com re-runs checkout with
+   the same cart, taps confirm WITHOUT paying, admin marks verified. Match by
+   hand — the new paise suffix will differ from the paid 550.74.
+4. **Copy `orders-backup.json`** out of the scratchpad (see above).
+5. Delete the `TEST-000` test row from the Fuko Orders sheet.
+6. Rename the Apps Script project to "Fuko order webhook".
+7. Delete the orphan "Fuko Orders" sheet + "Untitled project" script in the
+   **kapil@quicksand.co.in** account.
+8. Consider a customer-facing order-confirmation email (buyers currently get
+   nothing) — needs Resend domain verification first.
+9. Pre-existing lint debt: 5 `no-explicit-any` errors in `app/actions.ts`,
+   unused-var warnings — cosmetic, untouched.
+
+## Standing constraints (unchanged)
+
+- **No payment gateways** (Kapil's rule). Personal VPA `kapil.das@okicici`,
+  scan/save/copy only — browser `upi://` intents are bank-blocked; do not
+  re-add one-tap pay buttons.
+- QR saves need the hidden 880px canvas with 4-module quiet zone (gallery
+  decoders reject less).
+- `goatradingco@rbl` is QR-scan-only; never reuse it for typed payments.
+- ECC GateGuard blocks first Bash/Edit/Write per target: state the facts it
+  asks for in the same turn, then retry the identical call.
