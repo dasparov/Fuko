@@ -7,6 +7,8 @@ import { Order, OrderItem, DeliveryAddress, OrderStatus } from '@/lib/orders'
 import { revalidatePath } from 'next/cache'
 import { auth } from '@/auth'
 import { isAdmin } from '@/lib/admin'
+import { logOrderToSheet, orderMarkdown, OrderLogEvent } from '@/lib/order-log'
+import { sendAdminEmail } from '@/lib/resend'
 
 const SETTINGS_KEY = 'site_settings'
 
@@ -122,6 +124,20 @@ export async function getOrderByIdAction(id: string): Promise<Order | null> {
 }
 
 export async function saveOrderAction(order: Order): Promise<boolean> {
+    // Safety net first: the sheet write starts BEFORE the Postgres insert is
+    // awaited, so a Neon outage cannot stop the order being recorded.
+    // Design: docs/superpowers/specs/2026-08-03-order-sheet-backup-design.md
+    const session = await auth()
+    const extras = {
+        email: session?.user?.email ?? undefined,
+        userId: (session?.user as { id?: string } | undefined)?.id,
+    }
+    // The checkout fallback inserts directly with status Processing — that IS
+    // a paid event, so derive the event from status, not the call site.
+    const event: OrderLogEvent = order.status === "Awaiting Payment" ? "awaiting" : "paid"
+    const sheetPromise = logOrderToSheet(event, order, extras)
+
+    let dbOk = false
     try {
         await sql`
             INSERT INTO orders (id, date, status, total, items, customer_name, customer_phone, delivery_address, payment_screenshot, payment_amount, is_payment_verified)
@@ -140,11 +156,23 @@ export async function saveOrderAction(order: Order): Promise<boolean> {
             )
         `
         revalidatePath('/fukoadmin')
-        return true
+        dbOk = true
     } catch (error) {
         console.error("Postgres Write Error:", error)
-        return false
     }
+
+    // Email policy: every paid order (alert + backup copy); any failure of
+    // sheet or DB (the glitch this whole net exists for). Never for a
+    // cleanly-logged awaiting event — no pings for abandoned carts.
+    const sheetOk = await sheetPromise
+    if (event === "paid" || !sheetOk || !dbOk) {
+        const flags = [!dbOk && "DB WRITE FAILED", !sheetOk && "SHEET LOG FAILED"].filter(Boolean).join(" — ")
+        await sendAdminEmail(
+            `${flags ? `⚠ ${flags}: ` : ""}Fuko order ${order.id} (${event})`,
+            orderMarkdown(event, order, extras, new Date())
+        )
+    }
+    return dbOk
 }
 
 // The buyer's own "I've paid" tap: flips their pending order to Processing.
@@ -157,16 +185,41 @@ export async function confirmOrderPaymentAction(orderId: string, paymentScreensh
         const userId = (session?.user as { id?: string } | undefined)?.id
         if (!userId) return false
 
-        const { rowCount } = await sql`
+        const { rows } = await sql`
             UPDATE orders
             SET status = 'Processing',
                 payment_screenshot = COALESCE(${paymentScreenshot || null}, payment_screenshot)
             WHERE id = ${orderId}
               AND status = 'Awaiting Payment'
               AND customer_phone = (SELECT phone FROM users WHERE id = ${userId})
+            RETURNING *
         `
         revalidatePath('/fukoadmin')
-        return (rowCount ?? 0) > 0
+        if (rows.length === 0) return false
+
+        // Buyer just confirmed they paid — this is THE event worth recording
+        // and alerting on. Sheet row + admin email carry the full order.
+        const row = rows[0]
+        const paid: Order = {
+            id: row.id,
+            date: row.date,
+            status: row.status as OrderStatus,
+            items: row.items,
+            total: Number(row.total),
+            customerName: row.customer_name,
+            customerPhone: row.customer_phone,
+            deliveryAddress: row.delivery_address,
+            paymentScreenshot: row.payment_screenshot,
+            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
+            isPaymentVerified: row.is_payment_verified,
+        }
+        const extras = { email: session?.user?.email ?? undefined, userId }
+        const sheetOk = await logOrderToSheet("paid", paid, extras)
+        await sendAdminEmail(
+            `${sheetOk ? "" : "⚠ SHEET LOG FAILED: "}Fuko order ${paid.id} (paid)`,
+            orderMarkdown("paid", paid, extras, new Date())
+        )
+        return true
     } catch (error) {
         console.error("Postgres Confirm Payment Error:", error)
         return false
