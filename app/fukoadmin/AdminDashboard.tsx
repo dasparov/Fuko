@@ -1,7 +1,7 @@
 "use client"
 
 import { getOrdersAction, updateOrderStatusAction, deleteOrderAction, togglePaymentVerificationAction } from "@/app/actions"
-import { Order, OrderStatus } from "@/lib/orders"
+import { Order, OrderStatus, countsAsSale } from "@/lib/orders"
 import { getAllProductsAdminAction, saveProductAction, deleteProductAction, Product } from "@/app/actions"
 import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
 import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
@@ -17,9 +17,10 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
-const STATUS_OPTIONS: OrderStatus[] = ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"]
+const STATUS_OPTIONS: OrderStatus[] = ["Awaiting Payment", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled"]
 
 const STATUS_COLORS: Record<OrderStatus, string> = {
+    "Awaiting Payment": "bg-gray-100 text-gray-600",
     "Processing": "bg-amber-100 text-amber-700",
     "Shipped": "bg-blue-100 text-blue-700",
     "Out for Delivery": "bg-purple-100 text-purple-700",
@@ -104,7 +105,7 @@ export default function AdminDashboard() {
             if (isNaN(date.getTime())) return false
             const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
             const monthStr = `${MONTH_NAMES[date.getMonth()]} ${date.getFullYear()}`
-            return monthStr === selectedMonth && (o.status !== "Processing" || o.isPaymentVerified)
+            return monthStr === selectedMonth && countsAsSale(o)
         })
 
         // 2. Extract Available Cities from this Month's data
@@ -186,7 +187,7 @@ export default function AdminDashboard() {
             const matchesMonth = monthStr === selectedMonth
             const matchesCity = selectedCity ? (o.deliveryAddress?.city || "Unknown") === selectedCity : true
 
-            return matchesMonth && matchesCity && (o.status !== "Processing" || o.isPaymentVerified)
+            return matchesMonth && matchesCity && countsAsSale(o)
         })
 
         // CSV Header
@@ -437,7 +438,7 @@ export default function AdminDashboard() {
     const filteredOrders = orderFilter === "All" ? orders : orders.filter(o => o.status === orderFilter)
 
     // Standardize logic with Monthly Report
-    const validOrders = orders.filter(o => o.status !== "Processing" || o.isPaymentVerified)
+    const validOrders = orders.filter(countsAsSale)
 
     // Network Reach Calculation
     const networkReachMap = validOrders.reduce((acc, order) => {

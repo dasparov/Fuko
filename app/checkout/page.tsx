@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/Button"
 import { AuthPanel } from "@/components/auth/AuthPanel"
 import { useCart } from "@/context/CartContext"
-import { saveOrderAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
+import { saveOrderAction, confirmOrderPaymentAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
 import { Order, OrderStatus, DeliveryAddress } from "@/lib/orders"
 import { ArrowLeft, Check, Copy, MapPin, CreditCard, ChevronRight, User, Image as ImageIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
@@ -92,6 +92,47 @@ export default function CheckoutPage() {
             router.push("/cart")
         }
     }, [hydrated, items, step, router])
+
+    // The exact rupees-and-paise the buyer is asked for. Hoisted out of the
+    // payment step so the pending order can be written with it.
+    const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
+
+    // Write the order the moment the payment screen opens, before any money
+    // moves. UPI has no callback: if the buyer pays and then closes the tab,
+    // this row is the only thing the payment can be matched against. The ref
+    // stops StrictMode's double-invoke from inserting twice.
+    const pendingOrderRef = useRef(false)
+    useEffect(() => {
+        if (step !== "payment" || pendingOrderRef.current) return
+        if (!items.length || !userPhone) return
+        pendingOrderRef.current = true
+
+        ;(async () => {
+            const pending: Order = {
+                id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+                date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
+                status: "Awaiting Payment",
+                items,
+                total: cartTotal,
+                customerName: userName || "Customer",
+                customerPhone: userPhone,
+                deliveryAddress: selectedAddress ? {
+                    type: selectedAddress.type,
+                    line1: selectedAddress.line1,
+                    line2: selectedAddress.line2,
+                    city: selectedAddress.city,
+                    state: selectedAddress.state,
+                    pincode: selectedAddress.pincode
+                } : undefined,
+                paymentAmount: Number(paymentAmount)
+            }
+
+            // Not worth blocking checkout over: the buyer can still pay, and
+            // confirming falls back to inserting the order at that point.
+            if (await saveOrderAction(pending)) setOrderId(pending.id)
+            else pendingOrderRef.current = false
+        })()
+    }, [step, items, cartTotal, userName, userPhone, selectedAddress, paymentAmount])
 
     const handleUploadClick = () => {
         fileInputRef.current?.click()
@@ -418,7 +459,6 @@ export default function CheckoutPage() {
     // PAYMENT STEP
     if (step === "payment") {
         const upiId = "kapil.das@okicici"
-        const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
         // Generated QR with the paise-suffixed amount baked in, against the
         // personal ICICI VPA. (goatradingco@rbl was abandoned: the handle
         // doesn't resolve outside its own bank-issued QR.)
@@ -475,7 +515,7 @@ export default function CheckoutPage() {
             setTimeout(async () => {
                 try {
                     const newOrder: Order = {
-                        id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+                        id: orderId || `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
                         date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
                         status: "Processing" as OrderStatus,
                         items: items,
@@ -494,7 +534,12 @@ export default function CheckoutPage() {
                         paymentAmount: Number(paymentAmount)
                     }
 
-                    const success = await saveOrderAction(newOrder)
+                    // The row normally exists already, written on arrival at this
+                    // screen; confirming just flips it. Only insert if that write
+                    // failed, so a paid order is never lost to a dead network.
+                    const success = orderId
+                        ? await confirmOrderPaymentAction(orderId, paymentScreenshot || undefined)
+                        : await saveOrderAction(newOrder)
 
                     if (success) {
                         setOrderId(newOrder.id)

@@ -1,6 +1,9 @@
 "use client"
 
-export type OrderStatus = "Processing" | "Shipped" | "Out for Delivery" | "Delivered" | "Cancelled"
+// "Awaiting Payment" is written when the buyer reaches the payment screen, before
+// any money moves. UPI pays out of band, so without this row a buyer who pays and
+// then closes the tab sends money that matches no order at all.
+export type OrderStatus = "Awaiting Payment" | "Processing" | "Shipped" | "Out for Delivery" | "Delivered" | "Cancelled"
 
 export interface OrderItem {
     id: string
@@ -36,6 +39,12 @@ export interface Order {
     paymentAmount?: number
     isPaymentVerified?: boolean
 }
+
+// A sale only counts once the money is accounted for: never while the order is
+// still awaiting payment, and not while Processing until payment is verified.
+// Revenue, top customers and the monthly report all run through this.
+export const countsAsSale = (o: Order) =>
+    o.status !== "Awaiting Payment" && (o.status !== "Processing" || Boolean(o.isPaymentVerified))
 
 const STORAGE_KEY = "fuko_orders"
 

@@ -147,6 +147,32 @@ export async function saveOrderAction(order: Order): Promise<boolean> {
     }
 }
 
+// The buyer's own "I've paid" tap: flips their pending order to Processing.
+// Not an admin action, so it is scoped two ways — the order must still be
+// awaiting payment, and its phone must match the signed-in user's. Without that
+// scoping a 4-digit order id would be enough to touch a stranger's order.
+export async function confirmOrderPaymentAction(orderId: string, paymentScreenshot?: string): Promise<boolean> {
+    try {
+        const session = await auth()
+        const userId = (session?.user as { id?: string } | undefined)?.id
+        if (!userId) return false
+
+        const { rowCount } = await sql`
+            UPDATE orders
+            SET status = 'Processing',
+                payment_screenshot = COALESCE(${paymentScreenshot || null}, payment_screenshot)
+            WHERE id = ${orderId}
+              AND status = 'Awaiting Payment'
+              AND customer_phone = (SELECT phone FROM users WHERE id = ${userId})
+        `
+        revalidatePath('/fukoadmin')
+        return (rowCount ?? 0) > 0
+    } catch (error) {
+        console.error("Postgres Confirm Payment Error:", error)
+        return false
+    }
+}
+
 export async function updateOrderStatusAction(orderId: string, newStatus: OrderStatus): Promise<boolean> {
     if (!(await isAdmin())) return false
     try {
