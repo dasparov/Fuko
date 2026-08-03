@@ -102,10 +102,8 @@ abandoned checkout, delete.
 ## Database state
 
 **`orders` table wiped 2026-08-03** for a clean pre-launch slate. The 7 old
-rows (Feb–Jul, all test/family orders, no payment_amounts) are in
-`orders-backup.json` in the session scratchpad —
-`/private/tmp/claude-501/-Users-kapil-Documents-FUKO26/61156bd1-…/scratchpad/`.
-**tmp is not permanent: copy it somewhere safe or accept the loss.**
+rows (Feb–Jul) were all flow-test orders — owner confirmed nothing worth
+keeping, backup discarded.
 
 ## Open TODOs (next session)
 
@@ -121,14 +119,13 @@ rows (Feb–Jul, all test/family orders, no payment_amounts) are in
 3. **Recover the ₹550.74 order:** tagore4791@gmail.com re-runs checkout with
    the same cart, taps confirm WITHOUT paying, admin marks verified. Match by
    hand — the new paise suffix will differ from the paid 550.74.
-4. **Copy `orders-backup.json`** out of the scratchpad (see above).
-5. Delete the `TEST-000` test row from the Fuko Orders sheet.
-6. Rename the Apps Script project to "Fuko order webhook".
-7. Delete the orphan "Fuko Orders" sheet + "Untitled project" script in the
+4. Delete the `TEST-000` test row from the Fuko Orders sheet.
+5. Rename the Apps Script project to "Fuko order webhook".
+6. Delete the orphan "Fuko Orders" sheet + "Untitled project" script in the
    **kapil@quicksand.co.in** account.
-8. Consider a customer-facing order-confirmation email (buyers currently get
+7. Consider a customer-facing order-confirmation email (buyers currently get
    nothing) — needs Resend domain verification first.
-9. Pre-existing lint debt: 5 `no-explicit-any` errors in `app/actions.ts`,
+8. Pre-existing lint debt: 5 `no-explicit-any` errors in `app/actions.ts`,
    unused-var warnings — cosmetic, untouched.
 
 ## Standing constraints (unchanged)
