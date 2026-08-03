@@ -12,6 +12,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { compressImageToDataUrl } from "@/lib/compress-image"
+import { copyText } from "@/lib/copy-text"
 import { QRCodeCanvas } from "qrcode.react"
 import { CheckoutLoadingSkeleton } from "@/components/ui/Skeletons"
 import { toast } from "sonner"
@@ -429,19 +430,41 @@ export default function CheckoutPage() {
         // param variants including no-amount. Do NOT re-add one-tap pay buttons;
         // only a signed merchant gateway could bring them back, and Kapil has
         // ruled gateways out. The whole flow is scan-based instead.
-        const handleSaveQr = () => {
+        // iOS ignores <a download> for saving into Photos — at best the PNG lands
+        // in Files/Downloads, where the UPI app's gallery picker can't see it. The
+        // share sheet ("Save Image") is the only route to the camera roll, and it
+        // needs the File built synchronously: any await before navigator.share()
+        // drops the user activation and iOS throws NotAllowedError.
+        const handleSaveQr = async () => {
             const canvas = qrRef.current
             if (!canvas) return
-            const a = document.createElement("a")
-            a.href = canvas.toDataURL("image/png")
-            a.download = "fuko-upi-qr.png"
-            a.click()
+            const dataUrl = canvas.toDataURL("image/png")
+            const bin = atob(dataUrl.split(",")[1])
+            const bytes = new Uint8Array(bin.length)
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+            const file = new File([bytes], "fuko-upi-qr.png", { type: "image/png" })
+
+            if (navigator.canShare?.({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file] })
+                } catch {
+                    return // sheet dismissed — don't claim it saved
+                }
+            } else {
+                const a = document.createElement("a")
+                a.href = dataUrl
+                a.download = "fuko-upi-qr.png"
+                a.click()
+            }
             setCopied("qr")
             setTimeout(() => setCopied(null), 2500)
         }
 
-        const handleCopy = (text: string, which: string) => {
-            navigator.clipboard.writeText(text)
+        const handleCopy = async (text: string, which: string) => {
+            if (!(await copyText(text))) {
+                toast.error("Couldn't copy — long-press the text to select it instead.")
+                return
+            }
             setCopied(which)
             setTimeout(() => setCopied(null), 2000)
         }

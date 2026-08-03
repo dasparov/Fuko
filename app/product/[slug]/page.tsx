@@ -11,6 +11,8 @@ import { useState, useEffect, useRef } from "react";
 import { useCart } from "@/context/CartContext";
 import { getProductsAction, Product } from "@/app/actions";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { copyText } from "@/lib/copy-text";
+import { toast } from "sonner";
 
 export default function ProductPage() {
     const params = useParams();
@@ -136,8 +138,8 @@ export default function ProductPage() {
                 await navigator.share(shareData);
             } else {
                 // Fallback: copy to clipboard
-                await navigator.clipboard.writeText(window.location.href);
-                alert('Link copied to clipboard!');
+                const ok = await copyText(window.location.href);
+                toast[ok ? 'success' : 'error'](ok ? 'Link copied' : "Couldn't copy the link");
             }
         } catch (err) {
             console.error('Error sharing:', err);
