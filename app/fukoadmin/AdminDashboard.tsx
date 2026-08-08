@@ -1,7 +1,8 @@
 "use client"
 
-import { getOrdersAction, updateOrderStatusAction, deleteOrderAction, togglePaymentVerificationAction } from "@/app/actions"
+import { getOrdersAction, updateOrderStatusAction, updateOrderTrackingAction, deleteOrderAction, togglePaymentVerificationAction } from "@/app/actions"
 import { Order, OrderStatus, countsAsSale } from "@/lib/orders"
+import { whatsappUrl, WHATSAPP_BUTTON_LABEL } from "@/lib/whatsapp"
 import { getAllProductsAdminAction, saveProductAction, deleteProductAction, Product } from "@/app/actions"
 import { SiteSettings, DEFAULT_SETTINGS } from "@/lib/settings"
 import { getSiteSettingsAction, saveSiteSettingsAction } from "@/app/actions"
@@ -303,15 +304,14 @@ export default function AdminDashboard() {
         }
     }
 
-    // Prefilled WhatsApp confirmation — sent from the admin's own WhatsApp, so the
-    // thread doubles as the channel for payment proof if a payment can't be matched.
-    const whatsappConfirmUrl = (order: Order) => {
-        const digits = (order.customerPhone || "").replace(/\D/g, "")
-        const to = digits.length === 10 ? `91${digits}` : digits
-        const itemsList = order.items.map(i => `${i.name} x${i.quantity}`).join(", ")
-        const amount = order.paymentAmount?.toFixed(2) ?? String(order.total)
-        const text = `Hi ${order.customerName || "there"}! Your Fuko order ${order.id} is confirmed — ${itemsList}, ₹${amount} received ✅ Shipping in 1-2 days.`
-        return `https://wa.me/${to}?text=${encodeURIComponent(text)}`
+    // Saved on blur — one less button, and the admin usually tabs away to the
+    // status dropdown next anyway. No-op when nothing changed.
+    const handleTrackingChange = async (order: Order, trackingId: string) => {
+        if (trackingId.trim() === (order.trackingId ?? "")) return
+        if (await updateOrderTrackingAction(order.id, trackingId)) {
+            setOrders(await getOrdersAction())
+            toast.success(trackingId.trim() ? "Tracking number saved" : "Tracking number cleared")
+        }
     }
 
     const handleDeleteOrder = async (orderId: string) => {
@@ -638,15 +638,26 @@ export default function AdminDashboard() {
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </button>
+                                                        {/* Courier tracking — folded into the Shipped/Out for
+                                                            Delivery WhatsApp message when filled in. */}
+                                                        <input
+                                                            type="text"
+                                                            defaultValue={order.trackingId ?? ""}
+                                                            placeholder="Tracking no."
+                                                            onClick={e => e.stopPropagation()}
+                                                            onBlur={e => handleTrackingChange(order, e.target.value)}
+                                                            onKeyDown={e => { if (e.key === "Enter") e.currentTarget.blur() }}
+                                                            className="w-full sm:w-36 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs font-bold outline-none shadow-sm focus:border-accent placeholder:text-gray-400 placeholder:font-medium"
+                                                        />
                                                         {order.customerPhone && (
                                                             <a
-                                                                href={whatsappConfirmUrl(order)}
+                                                                href={whatsappUrl(order)}
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 onClick={e => e.stopPropagation()}
                                                                 className="w-full sm:w-auto px-4 py-2.5 bg-[#25D366]/10 text-[#128C7E] rounded-xl text-xs font-bold hover:bg-[#25D366]/20 active:scale-95 transition-all text-center"
                                                             >
-                                                                Confirm on WhatsApp
+                                                                {WHATSAPP_BUTTON_LABEL[order.status]}
                                                             </a>
                                                         )}
                                                         {!order.isPaymentVerified && (

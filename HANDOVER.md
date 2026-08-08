@@ -1,16 +1,21 @@
 # FUKO26 — Handover
 
-_Last updated: 2026-08-03 (evening session)_
+_Last updated: 2026-08-08_
 
 ## TL;DR
 
-Live at **https://okfuko.shop**. This session: **iOS checkout fixes** (QR save via
-share sheet, clipboard fallback), **admin reachability** (profile link, login
-callback, no more redirect loop), **two admin accounts**, **orders recorded
-before payment** (Awaiting Payment → Processing), and a **full order safety
-net**: every order event appends to a private Google Sheet and every paid order
-emails both admins. Orders table was wiped for a clean slate. **The end-to-end
-phone test of the new checkout has NOT been run yet — it's the first TODO.**
+Live at **https://okfuko.shop**. **This session (08-08):** the admin's WhatsApp
+button now **follows the order status** — it sends a Shipped message on Shipped,
+Delivered on Delivered, and so on, instead of repeating the payment
+confirmation every time. Added a **courier tracking number** field the admin
+fills in, which folds into the Shipped / Out for Delivery message. Schema
+migration already run against prod. **Not committed or pushed — the live site
+does not have this yet, and none of it has been clicked in a browser.**
+
+**Carried over from 08-03** (all still open): iOS checkout fixes, admin
+reachability, orders recorded before payment, and the Sheet + email safety net
+all shipped, but **the end-to-end phone test has still NOT been run** — it
+remains the first TODO.
 
 ---
 
@@ -18,7 +23,8 @@ phone test of the new checkout has NOT been run yet — it's the first TODO.**
 
 - **Production:** https://okfuko.shop — Vercel project `fuko`, team
   `kapildas-5794s-projects`, repo `github.com/dasparov/Fuko`, push to `main`
-  auto-deploys. Last commit this session: `7f1b74b`.
+  auto-deploys. Last commit on `main`: `f647302` — **deployed code is from
+  2026-08-03; the 08-08 WhatsApp work is local-only, not pushed.**
 - **Vercel CLI:** works via `npx -y vercel@latest …`, already authenticated as
   `kapildas-5794`, project linked. `env ls/add/rm` all confirmed working.
 - **Local dev:** `npm run dev` (use `localhost:3000`, not `0.0.0.0`, or Google
@@ -58,7 +64,46 @@ Admin working rule: an **Awaiting Payment** row + matching credit in the bank
 = real order (set Processing + verify). No credit after a day or two =
 abandoned checkout, delete.
 
-## Order safety net (new — spec in `docs/superpowers/specs/2026-08-03-order-sheet-backup-design.md`)
+## WhatsApp status updates (new 2026-08-08 — uncommitted)
+
+The admin dashboard had **one hardcoded message** ("payment received ✅
+shipping in 1-2 days") behind a button always labelled "Confirm on WhatsApp".
+Setting an order to Shipped and tapping it re-sent the payment confirmation.
+Now the button is a **status-update button**:
+
+- **`lib/whatsapp.ts`** — `whatsappMessage(order)` returns copy for the order's
+  saved status; `WHATSAPP_BUTTON_LABEL[status]` retitles the button ("Send
+  Shipped update", "Send Delivered update", …) so the admin sees what is about
+  to be sent. Both are `Record<OrderStatus, …>`, **not** a switch — adding a
+  status fails to compile until its copy is written.
+- Still **manual and still `wa.me`**: opens the admin's own WhatsApp with the
+  text prefilled, admin taps send. No WhatsApp Business API, nothing automated.
+- **Awaiting Payment** got a payment-nudge message (owner never specified one;
+  written rather than hiding the button). **Cancelled** promises a UPI refund —
+  change if that isn't the policy.
+- Copy is a first draft in the existing voice. Tests assert intent
+  ("has shipped", tracking present/absent), never exact wording, so the strings
+  can be rewritten freely.
+
+### Tracking number
+
+- `Order.trackingId` existed in the type since forever but was **never read or
+  written** — now wired up rather than adding a new field.
+- **`orders.tracking_id TEXT`** (nullable) added by `migrate-add-tracking.js`,
+  **already run against prod on 2026-08-08**. Reverse with
+  `ALTER TABLE orders DROP COLUMN tracking_id`.
+- Admin types it in a box beside the status dropdown; **saves on blur** (or
+  Enter), blank clears it. `updateOrderTrackingAction` in `app/actions.ts`.
+- Appears in the **Shipped** and **Out for Delivery** messages only, and only
+  when non-empty — no dangling "Tracking number:" on an empty field.
+
+### Incidental cleanup
+
+Four copies of the DB-row → `Order` mapping in `app/actions.ts` were folded
+into one `toOrder(row)` helper. They were already drifting; adding a column
+meant four edits and forgetting one showed the field on some screens only.
+
+## Order safety net (spec in `docs/superpowers/specs/2026-08-03-order-sheet-backup-design.md`)
 
 - `lib/order-log.ts`: builds a 13-cell row (IST timestamps, paise amount,
   items, name/phone/email/address, markdown `details` cell) and POSTs
@@ -105,7 +150,24 @@ abandoned checkout, delete.
 rows (Feb–Jul) were all flow-test orders — owner confirmed nothing worth
 keeping, backup discarded.
 
+**2026-08-08:** `tracking_id TEXT` (nullable) added to `orders`. Migration is
+already applied to prod; the code that uses it is not deployed yet, which is
+harmless — reads just see `undefined`.
+
 ## Open TODOs (next session)
+
+0. **Commit + push the WhatsApp status work** — five files, all uncommitted:
+   `lib/whatsapp.ts`, `lib/whatsapp.test.ts`, `migrate-add-tracking.js`,
+   `app/actions.ts`, `app/fukoadmin/AdminDashboard.tsx`. Push auto-deploys.
+   Before that: **read the message copy in `lib/whatsapp.ts` and rewrite it** —
+   it's a draft, and it's what customers actually read.
+0b. **Click the admin row once** — nothing was verified in a browser. Change a
+   status → check the button relabels and carries the right text; type a
+   tracking number → tab away → confirm the toast and that it shows up in the
+   Shipped message. `npm test` (36 passing) and `tsc` cover the logic, not the UI.
+0c. Uncommitted `.gitignore` line adds `.env*` — broader than needed.
+   `.env.local.example` is already tracked so it survives, but a *new* example
+   env file would be silently ignored. Narrow to `.env` + `.env.local` or drop it.
 
 1. **Test checkout end-to-end on the phone** (nothing verified on device yet):
    reach payment screen → `awaiting` row in sheet; iOS Save-QR share sheet +
@@ -126,7 +188,11 @@ keeping, backup discarded.
 7. Consider a customer-facing order-confirmation email (buyers currently get
    nothing) — needs Resend domain verification first.
 8. Pre-existing lint debt: 5 `no-explicit-any` errors in `app/actions.ts`,
-   unused-var warnings — cosmetic, untouched.
+   unused-var warnings — cosmetic, untouched. (`toOrder(row: any)` added this
+   session keeps the same pattern rather than typing the row shape.)
+9. `npx tsc --noEmit` reports one error in the **generated**
+   `.next/dev/types/validator.ts` about `app/api/auth/email-otp/verify/route.js`.
+   Stale Next build artifact, not real — ignore or clear `.next`.
 
 ## Standing constraints (unchanged)
 

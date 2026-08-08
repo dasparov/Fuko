@@ -53,24 +53,32 @@ export async function saveSiteSettingsAction(settings: SiteSettings): Promise<bo
 }
 
 // --- Order Actions (Postgres) ---
+
+// Single place a DB row becomes an Order. Every read used to inline its own
+// copy of this, so a new column meant remembering four edits — and forgetting
+// one showed the field on some screens and not others.
+function toOrder(row: any): Order {
+    return {
+        id: row.id,
+        date: row.date,
+        status: row.status as OrderStatus,
+        total: row.total,
+        items: row.items, // JSONB comes back as object
+        trackingId: row.tracking_id ?? undefined,
+        customerName: row.customer_name,
+        customerPhone: row.customer_phone,
+        deliveryAddress: row.delivery_address,
+        paymentScreenshot: row.payment_screenshot,
+        paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
+        isPaymentVerified: row.is_payment_verified
+    }
+}
+
 export async function getOrdersAction(): Promise<Order[]> {
     if (!(await isAdmin())) return []
     try {
         const { rows } = await sql`SELECT * FROM orders ORDER BY created_at DESC`
-        // Map database rows to Order interface
-        return rows.map((row: any) => ({
-            id: row.id,
-            date: row.date,
-            status: row.status as OrderStatus,
-            total: row.total,
-            items: row.items, // JSONB comes back as object
-            customerName: row.customer_name,
-            customerPhone: row.customer_phone,
-            deliveryAddress: row.delivery_address,
-            paymentScreenshot: row.payment_screenshot,
-            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
-            isPaymentVerified: row.is_payment_verified
-        }))
+        return rows.map(toOrder)
     } catch (error) {
         console.error("Postgres Read Error:", error)
         return []
@@ -80,19 +88,7 @@ export async function getOrdersAction(): Promise<Order[]> {
 export async function getOrdersForUserAction(phone: string): Promise<Order[]> {
     try {
         const { rows } = await sql`SELECT * FROM orders WHERE customer_phone = ${phone} ORDER BY created_at DESC`
-        return rows.map((row: any) => ({
-            id: row.id,
-            date: row.date,
-            status: row.status as OrderStatus,
-            total: row.total,
-            items: row.items,
-            customerName: row.customer_name,
-            customerPhone: row.customer_phone,
-            deliveryAddress: row.delivery_address,
-            paymentScreenshot: row.payment_screenshot,
-            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
-            isPaymentVerified: row.is_payment_verified
-        }))
+        return rows.map(toOrder)
     } catch (error) {
         console.error("Postgres User Orders Error:", error)
         return []
@@ -103,20 +99,7 @@ export async function getOrderByIdAction(id: string): Promise<Order | null> {
     try {
         const { rows } = await sql`SELECT * FROM orders WHERE id = ${id}`
         if (rows.length === 0) return null
-        const row: any = rows[0]
-        return {
-            id: row.id,
-            date: row.date,
-            status: row.status as OrderStatus,
-            total: row.total,
-            items: row.items,
-            customerName: row.customer_name,
-            customerPhone: row.customer_phone,
-            deliveryAddress: row.delivery_address,
-            paymentScreenshot: row.payment_screenshot,
-            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
-            isPaymentVerified: row.is_payment_verified
-        }
+        return toOrder(rows[0])
     } catch (error) {
         console.error("Postgres Get Order Error:", error)
         return null
@@ -199,20 +182,7 @@ export async function confirmOrderPaymentAction(orderId: string, paymentScreensh
 
         // Buyer just confirmed they paid — this is THE event worth recording
         // and alerting on. Sheet row + admin email carry the full order.
-        const row = rows[0]
-        const paid: Order = {
-            id: row.id,
-            date: row.date,
-            status: row.status as OrderStatus,
-            items: row.items,
-            total: Number(row.total),
-            customerName: row.customer_name,
-            customerPhone: row.customer_phone,
-            deliveryAddress: row.delivery_address,
-            paymentScreenshot: row.payment_screenshot,
-            paymentAmount: row.payment_amount != null ? Number(row.payment_amount) : undefined,
-            isPaymentVerified: row.is_payment_verified,
-        }
+        const paid: Order = { ...toOrder(rows[0]), total: Number(rows[0].total) }
         const extras = { email: session?.user?.email ?? undefined, userId }
         const sheetOk = await logOrderToSheet("paid", paid, extras)
         await sendAdminEmail(
@@ -234,6 +204,20 @@ export async function updateOrderStatusAction(orderId: string, newStatus: OrderS
         return true
     } catch (error) {
         console.error("Postgres Update Status Error:", error)
+        return false
+    }
+}
+
+// Courier tracking number, typed by the admin once the parcel is handed over.
+// Blank clears it, so a number entered on the wrong order can be undone.
+export async function updateOrderTrackingAction(orderId: string, trackingId: string): Promise<boolean> {
+    if (!(await isAdmin())) return false
+    try {
+        await sql`UPDATE orders SET tracking_id = ${trackingId.trim() || null} WHERE id = ${orderId}`
+        revalidatePath('/fukoadmin')
+        return true
+    } catch (error) {
+        console.error("Postgres Update Tracking Error:", error)
         return false
     }
 }
