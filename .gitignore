@@ -26,3 +26,8 @@
 
 # TypeScript incremental build cache
 tsconfig.tsbuildinfo
+
+# Catch-all for real secrets (the named .env entries above are subsets of this),
+# but keep the placeholder templates trackable.
+.env*
+!.env*.example

@@ -9,8 +9,8 @@ button now **follows the order status** — it sends a Shipped message on Shippe
 Delivered on Delivered, and so on, instead of repeating the payment
 confirmation every time. Added a **courier tracking number** field the admin
 fills in, which folds into the Shipped / Out for Delivery message. Schema
-migration already run against prod. **Not committed or pushed — the live site
-does not have this yet, and none of it has been clicked in a browser.**
+migration run against prod and **deployed live** (`4de4e3b`). **Still not
+clicked in a browser by anyone — tests and types pass, the UI is unverified.**
 
 **Carried over from 08-03** (all still open): iOS checkout fixes, admin
 reachability, orders recorded before payment, and the Sheet + email safety net
@@ -23,8 +23,9 @@ remains the first TODO.
 
 - **Production:** https://okfuko.shop — Vercel project `fuko`, team
   `kapildas-5794s-projects`, repo `github.com/dasparov/Fuko`, push to `main`
-  auto-deploys. Last commit on `main`: `f647302` — **deployed code is from
-  2026-08-03; the 08-08 WhatsApp work is local-only, not pushed.**
+  auto-deploys. Last deploy: `4de4e3b` (2026-08-08, `dpl_2iZs8dwLeX7fHoEVBAk5fqwCWcAk`).
+  **Note:** admin tabs cache the old JS bundle — hard-refresh `/fukoadmin`
+  after a deploy or you'll test stale code and think the deploy failed.
 - **Vercel CLI:** works via `npx -y vercel@latest …`, already authenticated as
   `kapildas-5794`, project linked. `env ls/add/rm` all confirmed working.
 - **Local dev:** `npm run dev` (use `localhost:3000`, not `0.0.0.0`, or Google
@@ -64,7 +65,7 @@ Admin working rule: an **Awaiting Payment** row + matching credit in the bank
 = real order (set Processing + verify). No credit after a day or two =
 abandoned checkout, delete.
 
-## WhatsApp status updates (new 2026-08-08 — uncommitted)
+## WhatsApp status updates (new 2026-08-08 — live)
 
 The admin dashboard had **one hardcoded message** ("payment received ✅
 shipping in 1-2 days") behind a button always labelled "Confirm on WhatsApp".
@@ -150,24 +151,22 @@ meant four edits and forgetting one showed the field on some screens only.
 rows (Feb–Jul) were all flow-test orders — owner confirmed nothing worth
 keeping, backup discarded.
 
-**2026-08-08:** `tracking_id TEXT` (nullable) added to `orders`. Migration is
-already applied to prod; the code that uses it is not deployed yet, which is
-harmless — reads just see `undefined`.
+**2026-08-08:** `tracking_id TEXT` (nullable) added to `orders`, applied to
+prod and live. Existing orders have it `NULL` → `undefined`, so they simply
+carry no tracking line until the admin types one.
 
 ## Open TODOs (next session)
 
-0. **Commit + push the WhatsApp status work** — five files, all uncommitted:
-   `lib/whatsapp.ts`, `lib/whatsapp.test.ts`, `migrate-add-tracking.js`,
-   `app/actions.ts`, `app/fukoadmin/AdminDashboard.tsx`. Push auto-deploys.
-   Before that: **read the message copy in `lib/whatsapp.ts` and rewrite it** —
-   it's a draft, and it's what customers actually read.
-0b. **Click the admin row once** — nothing was verified in a browser. Change a
-   status → check the button relabels and carries the right text; type a
-   tracking number → tab away → confirm the toast and that it shows up in the
-   Shipped message. `npm test` (36 passing) and `tsc` cover the logic, not the UI.
-0c. Uncommitted `.gitignore` line adds `.env*` — broader than needed.
-   `.env.local.example` is already tracked so it survives, but a *new* example
-   env file would be silently ignored. Narrow to `.env` + `.env.local` or drop it.
+0. **Read the WhatsApp message copy in `lib/whatsapp.ts` (lines 18-24) and
+   rewrite it.** It shipped as a first draft written by Claude, not by the
+   owner, and it is what customers actually read. Check the **Cancelled** line
+   especially — it promises a UPI refund. Tests assert intent, never wording,
+   so edits are free.
+0b. **Click the admin row once** — deployed but never verified in a browser.
+   Hard-refresh `/fukoadmin` first. Change a status → button relabels and
+   carries the right text; type a tracking number → tab away → toast, and it
+   appears in the Shipped message. `npm test` (36 passing) and `tsc` cover the
+   logic, not the UI.
 
 1. **Test checkout end-to-end on the phone** (nothing verified on device yet):
    reach payment screen → `awaiting` row in sheet; iOS Save-QR share sheet +
