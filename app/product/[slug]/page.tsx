@@ -262,7 +262,7 @@ export default function ProductPage() {
                         </li>
                         <li className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-nature" />
-                            <span>Free shipping on orders over ₹1500</span>
+                            <span>Free shipping, always</span>
                         </li>
                     </ul>
                 </div>

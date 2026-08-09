@@ -12,7 +12,7 @@ import Image from "next/image"
 import { Order, DeliveryAddress } from "@/lib/orders"
 import { getOrdersForUserAction, getUserProfileAction, updateUserProfileAction, isAdminAction } from "@/app/actions"
 import { INDIAN_STATES } from "@/lib/constants"
-import { OrderCardSkeleton, AddressCardSkeleton } from "@/components/ui/Skeletons"
+import { OrderCardSkeleton, AddressCardSkeleton, ProfileHeaderSkeleton } from "@/components/ui/Skeletons"
 
 export default function ProfilePage() {
     const { addItem } = useCart()
@@ -161,6 +161,16 @@ export default function ProfilePage() {
 
             {/* User Info Card */}
             <div className="mx-6 mb-8 flex items-center gap-4 rounded-3xl bg-paper p-6">
+                {/* The session resolves before the profile fetch returns, so this
+                    card would otherwise render logged-in but empty for a beat —
+                    "Welcome, Friend" over a blank email — then snap to the real
+                    name. profileLoading already tracks that window for the lists
+                    below; the header now waits on it too. */}
+                {/* Gated on userId too, not just isLoggedIn: the fetch effect bails
+                    early without a userId and never clears profileLoading, so
+                    without this a session missing its id would sit on the skeleton
+                    forever. It falls through to the normal card instead. */}
+                {isLoggedIn && userId && profileLoading ? <ProfileHeaderSkeleton /> : <>
                 {isLoggedIn && userName && (
                     <div
                         className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent text-2xl font-bold text-white transition-transform active:scale-95"
@@ -209,6 +219,7 @@ export default function ProfilePage() {
                         </div>
                     )}
                 </div>
+                </>}
             </div>
 
             {isLoggedIn && (

@@ -31,6 +31,25 @@ export function AddressCardSkeleton() {
 }
 
 /**
+ * Profile header placeholder. The session resolves before the profile fetch
+ * returns, so without this the card renders logged-in but empty for a moment —
+ * "Welcome, Friend" over a blank email, which then snaps to the real name.
+ * Mirrors the avatar + name + email + phone layout so nothing shifts.
+ */
+export function ProfileHeaderSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-16 w-16 shrink-0 rounded-full" /> {/* avatar */}
+      <div className="flex-1 space-y-2">
+        <Skeleton className="h-5 w-40" /> {/* name */}
+        <Skeleton className="h-3 w-52" /> {/* email */}
+        <Skeleton className="h-3 w-28" /> {/* phone */}
+      </div>
+    </>
+  )
+}
+
+/**
  * Checkout placeholder shown while the session/profile resolves. Mirrors the
  * "Select Delivery Address" screen a returning user lands on, so the transition
  * doesn't feel like a blank/loading flash.

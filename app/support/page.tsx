@@ -33,8 +33,8 @@ export default function SupportPage() {
                         <div>
                             <h3 className="font-semibold text-gray-900">Email Us</h3>
                             <p className="text-sm text-gray-500 mt-1">For general inquiries and order support.</p>
-                            <a href="mailto:support@okfuko.shop" className="text-blue-600 font-medium text-sm mt-2 inline-block hover:underline">
-                                support@okfuko.shop
+                            <a href="mailto:thegoatradingco@gmail.com" className="text-blue-600 font-medium text-sm mt-2 inline-block hover:underline">
+                                thegoatradingco@gmail.com
                             </a>
                         </div>
                     </div>

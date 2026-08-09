@@ -67,7 +67,7 @@ export default function TermsPage() {
 
                 <div className="pt-8 border-t border-gray-100">
                     <p className="text-xs text-gray-400">
-                        If you have any questions about these Terms, please contact us at support@okfuko.shop
+                        If you have any questions about these Terms, please contact us at thegoatradingco@gmail.com
                     </p>
                 </div>
             </div>
