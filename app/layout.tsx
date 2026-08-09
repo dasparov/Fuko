@@ -14,9 +14,21 @@ const bodyFont = Inter({
   subsets: ["latin"],
 });
 
+// metadataBase makes og:image absolute — WhatsApp and every other scraper
+// ignore a relative image URL, so without this the preview stays blank.
+// The card itself is app/opengraph-image.jpg: Next's file convention emits
+// og:image with its dimensions and type, so there is nothing to declare here.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://okfuko.shop"),
   title: "Fuko | Premium RYO Blends",
   description: "Organic, hand-crafted rolling tobacco blends.",
+  openGraph: {
+    type: "website",
+    siteName: "Fuko",
+    url: "https://okfuko.shop",
+    title: "Fuko | Premium RYO Blends",
+    description: "Organic, hand-crafted rolling tobacco blends.",
+  },
 };
 
 import { CartProvider } from "@/context/CartContext";
