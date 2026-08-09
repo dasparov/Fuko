@@ -466,7 +466,23 @@ export default function CheckoutPage() {
         // Generated QR with the paise-suffixed amount baked in, against the
         // personal ICICI VPA. (goatradingco@rbl was abandoned: the handle
         // doesn't resolve outside its own bank-issued QR.)
-        const upiIntentUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("Fuko")}&am=${paymentAmount}&cu=INR&tn=${encodeURIComponent("Order Payment")}`
+        const upiParams = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent("Fuko")}&am=${paymentAmount}&cu=INR&tn=${encodeURIComponent("Order Payment")}`
+        const upiIntentUrl = `upi://pay?${upiParams}`
+
+        // iOS has no universal upi:// handler. Android resolves the generic
+        // scheme through intent resolution and offers whichever apps are
+        // installed; on iPhone an app only opens if it registered that exact
+        // scheme, and none of them claim upi://, so the generic link silently
+        // does nothing. Same params, per-app scheme.
+        //
+        // Rendered unconditionally rather than behind a userAgent check:
+        // reading navigator during render desyncs hydration, and one extra row
+        // of buttons costs far less than that bug.
+        const UPI_APPS = [
+            { name: "GPay", url: `tez://upi/pay?${upiParams}` },
+            { name: "PhonePe", url: `phonepe://pay?${upiParams}` },
+            { name: "Paytm", url: `paytmmp://pay?${upiParams}` },
+        ]
 
         // Banks accept a personal VPA only via SCANNED payments. Browser-launched
         // upi:// intents (and gpay://, phonepe://, …) are declined after PIN entry
@@ -602,6 +618,29 @@ export default function CheckoutPage() {
                         <p className="text-2xl font-heading font-bold text-accent mb-1">₹{paymentAmount}</p>
                         <p className="text-[10px] text-muted mb-4">Pay this exact amount — it lets us match your payment instantly</p>
 
+                        {/* Primary path, above the QR because it is the shortest one:
+                            one tap into the UPI app with the amount already filled.
+                            The QR below is the desktop route and the fallback. */}
+                        <a
+                            href={upiIntentUrl}
+                            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 px-4 text-base font-bold text-white shadow-sm transition-all hover:bg-accent active:scale-95"
+                        >
+                            Pay ₹{paymentAmount}
+                            <ChevronRight className="h-5 w-5 shrink-0" />
+                        </a>
+                        <div className="mt-2 flex items-center justify-center gap-2">
+                            {UPI_APPS.map(app => (
+                                <a
+                                    key={app.name}
+                                    href={app.url}
+                                    className="flex-1 rounded-xl border border-muted/15 bg-white py-2.5 text-[11px] font-bold text-primary transition-colors hover:border-accent"
+                                >
+                                    {app.name}
+                                </a>
+                            ))}
+                        </div>
+                        <p className="mt-2 mb-5 text-[10px] text-muted">On iPhone, use the app buttons — iOS can&rsquo;t open the generic UPI link.</p>
+
                         {/* Scan-first flow — the only path banks accept for this VPA */}
                         <div className="flex flex-col items-center gap-2">
                             <div className="rounded-2xl border border-muted/10 bg-white p-3">
@@ -647,20 +686,8 @@ export default function CheckoutPage() {
                                     ? <span className="flex items-center justify-center gap-2"><Check className="h-4 w-4" /> Saved — check your gallery</span>
                                     : "Save QR to gallery"}
                             </button>
-                            {/* One tap into the UPI app, amount already filled. Only works
-                                on a phone — desktop browsers have no UPI app to hand off
-                                to, which is why the QR above stays: it's the desktop path
-                                (scan from another device) and the fallback if a bank
-                                declines the intent. */}
-                            <a
-                                href={upiIntentUrl}
-                                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-nature py-4 px-4 text-sm font-bold text-white shadow-sm transition-all active:scale-95"
-                            >
-                                Pay ₹{paymentAmount} in your UPI app
-                                <ChevronRight className="h-4 w-4 shrink-0" />
-                            </a>
                             <p className="mt-2 text-center text-[10px] text-muted">
-                                Opens GPay / PhonePe / Paytm with the exact amount filled in. On a computer? Scan the QR above with your phone.
+                                On a computer? Scan the QR above with your phone.
                             </p>
                         </div>
                     </div>
