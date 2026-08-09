@@ -1,6 +1,6 @@
 # FUKO26 — Handover
 
-_Last updated: 2026-08-08_
+_Last updated: 2026-08-09_
 
 ## TL;DR
 
@@ -11,6 +11,10 @@ confirmation every time. Added a **courier tracking number** field the admin
 fills in, which folds into the Shipped / Out for Delivery message. Schema
 migration run against prod and **deployed live** (`4de4e3b`). **Still not
 clicked in a browser by anyone — tests and types pass, the UI is unverified.**
+
+**08-09:** shared links now show a **graphic preview card** instead of a bare
+URL, and the homepage **ticker no longer flashes bare dots** before its text
+loads. Both live.
 
 **Carried over from 08-03** (all still open): iOS checkout fixes, admin
 reachability, orders recorded before payment, and the Sheet + email safety net
@@ -23,7 +27,10 @@ remains the first TODO.
 
 - **Production:** https://okfuko.shop — Vercel project `fuko`, team
   `kapildas-5794s-projects`, repo `github.com/dasparov/Fuko`, push to `main`
-  auto-deploys. Last deploy: `4de4e3b` (2026-08-08, `dpl_2iZs8dwLeX7fHoEVBAk5fqwCWcAk`).
+  auto-deploys. Last deploy: 2026-08-09 (see `git log`).
+  **Watch out:** `vercel ls` can still show the *previous* deployment as Ready
+  seconds after a push, so a "wait until not Building" loop exits immediately
+  and verifies stale output. Confirm the deployment age is < your push.
   **Note:** admin tabs cache the old JS bundle — hard-refresh `/fukoadmin`
   after a deploy or you'll test stale code and think the deploy failed.
 - **Vercel CLI:** works via `npx -y vercel@latest …`, already authenticated as
@@ -64,6 +71,45 @@ way; see TODOs). Now:
 Admin working rule: an **Awaiting Payment** row + matching credit in the bank
 = real order (set Processing + verify). No credit after a day or two =
 abandoned checkout, delete.
+
+## Link previews / OG image (new 2026-08-09 — live)
+
+Sharing okfuko.shop rendered as plain text: the site had `title` +
+`description` but **no `og:image` and no `metadataBase`**, so scrapers had no
+picture and no absolute URL to resolve against.
+
+- **`app/opengraph-image.jpg`** — 1200×630, 65KB, cropped from
+  `public/hero-landscape.jpg` (2400×1340) via `sharp`:
+  `.extract({left:38, top:0, width:2324, height:1220}).resize(1200,630)`.
+  The offset crop exists to **cut the AI-generation ✦ watermark** out of the
+  source's bottom-right corner — don't regenerate with a centred crop
+  (macOS `sips` only does centred) or the watermark comes back.
+- **No text overlaid**, deliberately: the pack in the photo already carries the
+  logo, and WhatsApp prints title + description beneath the card anyway.
+- **`app/layout.tsx`** — added `metadataBase: new URL("https://okfuko.shop")`
+  and an `openGraph` block. The **image needs no config**: Next's file
+  convention emits `og:image` + width/height/type from the filename alone.
+- Verified live: `og:image` absolute, image returns 200 `image/jpeg` 66393 B.
+
+⚠️ **WhatsApp caches previews per URL, for days.** A link shared before this
+shipped will keep showing the old blank preview no matter what the site
+returns. To test, share a URL it has never scraped — `okfuko.shop/?v=2`.
+"It didn't work" is almost always this cache.
+
+Copy was left as-is; owner considered a "heritage / terroir" description on
+08-09 and chose to keep `"Organic, hand-crafted rolling tobacco blends."`
+
+## Homepage ticker dots (fixed 2026-08-09)
+
+`app/page.tsx` marquee: the ` • ` separator was a literal **outside** the
+`settings?.tickerText` optional chain, so during the client-side settings
+fetch the text rendered as nothing while four bullets rendered anyway — a row
+of bare dots. The animated element is now mounted only once the text exists,
+which also stops `.animate-marquee` burning part of its 40s cycle against
+empty content (the text used to appear already mid-scroll).
+
+Side effect, intended: blanking the ticker text in the admin panel now renders
+an empty bar rather than bare dots.
 
 ## WhatsApp status updates (new 2026-08-08 — live)
 

@@ -261,12 +261,20 @@ export default function Home() {
 
       {/* Marquee Section */}
       <div className="relative flex overflow-x-hidden bg-accent py-3 text-white">
-        <div className="animate-marquee whitespace-nowrap font-heading text-sm font-bold tracking-widest uppercase">
-          <span>{settings?.tickerText} • </span>
-          <span>{settings?.tickerText} • </span>
-          <span>{settings?.tickerText} • </span>
-          <span>{settings?.tickerText} • </span>
-        </div>
+        {/* Mounted only once the text is here. The bullet is a literal, so
+            rendering during the settings fetch painted a row of bare dots —
+            and the animation would have burned part of its cycle against
+            empty content, so the text jumped in mid-scroll instead of
+            starting from the right. The bar keeps its height either way, so
+            nothing shifts when the text arrives. */}
+        {settings?.tickerText && (
+          <div className="animate-marquee whitespace-nowrap font-heading text-sm font-bold tracking-widest uppercase">
+            <span>{settings.tickerText} • </span>
+            <span>{settings.tickerText} • </span>
+            <span>{settings.tickerText} • </span>
+            <span>{settings.tickerText} • </span>
+          </div>
+        )}
       </div>
 
       <PageContainer>
