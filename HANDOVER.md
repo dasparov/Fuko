@@ -12,9 +12,12 @@ fills in, which folds into the Shipped / Out for Delivery message. Schema
 migration run against prod and **deployed live** (`4de4e3b`). **Still not
 clicked in a browser by anyone — tests and types pass, the UI is unverified.**
 
-**08-09:** shared links now show a **graphic preview card** instead of a bare
-URL, and the homepage **ticker no longer flashes bare dots** before its text
-loads. Both live.
+**08-09:** the big one — **one-tap UPI payment is back**, on a merchant VPA,
+working on Android and iOS. Also live: **graphic link-preview card**, the
+homepage **ticker no longer flashes bare dots**, **three blends repriced to
+₹645**, support email → **thegoatradingco@gmail.com**, banner → **"Free
+shipping, always"**, and the profile card no longer flashes "Welcome, Friend"
+before the user's name loads.
 
 **Carried over from 08-03** (all still open): iOS checkout fixes, admin
 reachability, orders recorded before payment, and the Sheet + email safety net
@@ -71,6 +74,46 @@ way; see TODOs). Now:
 Admin working rule: an **Awaiting Payment** row + matching credit in the bank
 = real order (set Processing + verify). No credit after a day or two =
 abandoned checkout, delete.
+
+## UPI checkout: one-tap restored (2026-08-09 — live)
+
+**The blocker was the VPA, never the code.** `kapil.das@okicici` was a
+*personal* handle; banks decline browser-launched `upi://` intents to personal
+VPAs after PIN entry with a fake "you've exceeded the bank limit" error.
+Retested 2026-08-09 — identical failure, 8 days after the first test. Five URL
+variants had already been tried. No query string fixes it.
+
+Kapil supplied a **merchant VPA, `kapil.das-2@okhdfcbank`**, and a real payment
+completed. Checkout now leads with one-tap.
+
+### Current payment screen, in order
+1. **Big blue "Pay ₹…"** button — turns green + "Opened — finish in your UPI
+   app" on tap. Green means *handed off*, **not paid** — the browser can't see
+   payment success, which is why the manual confirm step still exists.
+2. **GPay / PhonePe / Paytm** tiles with real logos (`public/upi-*.svg`,
+   Simple Icons).
+3. **QR** — kept deliberately. It is the *desktop* path (`upi://` does nothing
+   in a desktop browser) and the per-bank fallback. Don't remove it.
+
+### iOS specifics (hard-won, don't relearn)
+- **iOS has no universal `upi://` handler.** Android resolves it via intent
+  resolution; on iPhone an app opens only if it registered that exact scheme.
+- **WhatsApp registers `upi://` on iOS and wins it** — the generic link handed
+  payments to a chat app. So iOS targets GPay's `tez://` scheme directly
+  (`primaryPayUrl`), Android keeps the generic intent.
+- Per-app schemes: `tez://upi/pay?` (GPay), `phonepe://pay?`, `paytmmp://pay?`.
+  All built from one shared `upiParams` so VPA/amount can't drift apart.
+- `isIOS` is set in a `useEffect`, **not** during render — reading `navigator`
+  while rendering desyncs hydration.
+
+### Testing trap
+A "it doesn't work" report on 2026-08-09 turned out to be **self-payment** —
+Kapil paying his own VPA from his own account. Confirmed. A friend's phone
+worked. **Never test with the merchant's own account**; it isn't representative
+and it fails in ways customers never see.
+
+Copy-ID/copy-amount rows were removed: one clipboard slot meant two app
+switches to reach a screen where the amount gets typed anyway.
 
 ## Link previews / OG image (new 2026-08-09 — live)
 
@@ -213,6 +256,14 @@ carry no tracking line until the admin types one.
    carries the right text; type a tracking number → tab away → toast, and it
    appears in the Shipped message. `npm test` (36 passing) and `tsc` cover the
    logic, not the UI.
+0c. **Dead code:** `handleCopy` in `app/checkout/page.tsx` (~line 523) is
+   orphaned since the copy rows were removed. Lint warning only; delete it.
+0d. **Never verified in a browser by a human:** the `/profile` header skeleton
+   (needs a signed-in session) and the checkout screen on Android. iOS one-tap
+   *was* confirmed working by the owner.
+0e. UPI app logos are **monochrome** Simple Icons silhouettes. Swap to
+   full-colour by refetching `https://cdn.simpleicons.org/<slug>/<hex>` if
+   wanted.
 
 1. **Test checkout end-to-end on the phone** (nothing verified on device yet):
    reach payment screen → `awaiting` row in sheet; iOS Save-QR share sheet +
@@ -241,9 +292,12 @@ carry no tracking line until the admin types one.
 
 ## Standing constraints (unchanged)
 
-- **No payment gateways** (Kapil's rule). Personal VPA `kapil.das@okicici`,
-  scan/save/copy only — browser `upi://` intents are bank-blocked; do not
-  re-add one-tap pay buttons.
+- **No payment gateways** (Kapil's rule) — still stands. A **merchant VPA is
+  not a gateway**, it's a bank-account feature, and that is what unblocked
+  one-tap (see the UPI section). Don't propose Razorpay/Cashfree.
+- **One-tap UPI works again as of 2026-08-09** on the merchant VPA
+  `kapil.das-2@okhdfcbank`. The old "never re-add one-tap pay buttons" rule is
+  **obsolete** — it applied to the personal `kapil.das@okicici` handle.
 - QR saves need the hidden 880px canvas with 4-module quiet zone (gallery
   decoders reject less).
 - `goatradingco@rbl` is QR-scan-only; never reuse it for typed payments.
