@@ -55,6 +55,11 @@ export default function CheckoutPage() {
     // identifiable in the merchant's UPI feed by amount alone (no screenshot needed).
     const [paiseSuffix] = useState(() => Math.floor(1 + Math.random() * 99))
     const [copied, setCopied] = useState<string | null>(null)
+    // On iOS upi:// goes to whichever app claimed the scheme — WhatsApp grabs
+    // it — so the primary button has to target GPay's own scheme there. Set
+    // after mount: reading navigator during render would desync hydration.
+    const [isIOS, setIsIOS] = useState(false)
+    useEffect(() => { setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent)) }, [])
 
     // Once authenticated, load the profile and route to the right step.
     useEffect(() => {
@@ -479,10 +484,12 @@ export default function CheckoutPage() {
         // reading navigator during render desyncs hydration, and one extra row
         // of buttons costs far less than that bug.
         const UPI_APPS = [
-            { name: "GPay", url: `tez://upi/pay?${upiParams}` },
-            { name: "PhonePe", url: `phonepe://pay?${upiParams}` },
-            { name: "Paytm", url: `paytmmp://pay?${upiParams}` },
+            { name: "GPay", url: `tez://upi/pay?${upiParams}`, dot: "#4285F4" },
+            { name: "PhonePe", url: `phonepe://pay?${upiParams}`, dot: "#5F259F" },
+            { name: "Paytm", url: `paytmmp://pay?${upiParams}`, dot: "#00BAF2" },
         ]
+        // iOS: skip the generic scheme entirely, it lands in WhatsApp.
+        const primaryPayUrl = isIOS ? UPI_APPS[0].url : upiIntentUrl
 
         // Banks accept a personal VPA only via SCANNED payments. Browser-launched
         // upi:// intents (and gpay://, phonepe://, …) are declined after PIN entry
@@ -622,24 +629,25 @@ export default function CheckoutPage() {
                             one tap into the UPI app with the amount already filled.
                             The QR below is the desktop route and the fallback. */}
                         <a
-                            href={upiIntentUrl}
+                            href={primaryPayUrl}
                             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 px-4 text-base font-bold text-white shadow-sm transition-all hover:bg-accent active:scale-95"
                         >
-                            Pay ₹{paymentAmount}
+                            Pay ₹{paymentAmount}{isIOS ? " with GPay" : ""}
                             <ChevronRight className="h-5 w-5 shrink-0" />
                         </a>
-                        <div className="mt-2 flex items-center justify-center gap-2">
+                        <div className="mt-3 flex items-center justify-center gap-2">
                             {UPI_APPS.map(app => (
                                 <a
                                     key={app.name}
                                     href={app.url}
-                                    className="flex-1 rounded-xl border border-muted/15 bg-white py-2.5 text-[11px] font-bold text-primary transition-colors hover:border-accent"
+                                    className="flex flex-1 flex-col items-center gap-1.5 rounded-xl border border-muted/15 bg-white py-3 text-[11px] font-bold text-primary shadow-sm transition-colors hover:border-accent"
                                 >
+                                    <span className="h-5 w-5 rounded-full" style={{ backgroundColor: app.dot }} />
                                     {app.name}
                                 </a>
                             ))}
                         </div>
-                        <p className="mt-2 mb-5 text-[10px] text-muted">On iPhone, use the app buttons — iOS can&rsquo;t open the generic UPI link.</p>
+                        <p className="mt-2 mb-5 text-[10px] text-muted">Or pick another UPI app</p>
 
                         {/* Scan-first flow — the only path banks accept for this VPA */}
                         <div className="flex flex-col items-center gap-2">
