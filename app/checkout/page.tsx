@@ -458,7 +458,11 @@ export default function CheckoutPage() {
 
     // PAYMENT STEP
     if (step === "payment") {
-        const upiId = "kapil.das@okicici"
+        // Merchant handle (2026-08-09), replacing the personal kapil.das@okicici
+        // that banks declined for browser-launched intents.
+        // NOTE: this VPA feeds BOTH the QR and the intent — verify a real
+        // payment down each path, not just one.
+        const upiId = "kapil.das-2@okhdfcbank"
         // Generated QR with the paise-suffixed amount baked in, against the
         // personal ICICI VPA. (goatradingco@rbl was abandoned: the handle
         // doesn't resolve outside its own bank-issued QR.)
@@ -643,25 +647,21 @@ export default function CheckoutPage() {
                                     ? <span className="flex items-center justify-center gap-2"><Check className="h-4 w-4" /> Saved — check your gallery</span>
                                     : "Save QR to gallery"}
                             </button>
-                            <div className="mt-3 flex flex-col gap-2">
-                                {[
-                                    { key: "id", label: "UPI ID", value: upiId, display: upiId },
-                                    { key: "amt", label: "Amount", value: paymentAmount, display: `₹${paymentAmount}` },
-                                ].map(row => (
-                                    <button
-                                        key={row.key}
-                                        onClick={() => handleCopy(row.value, row.key)}
-                                        className="flex items-center gap-2 whitespace-nowrap rounded-2xl border border-muted/10 bg-paper py-3 px-4 text-xs transition-colors hover:border-accent"
-                                    >
-                                        <span className="font-black text-muted uppercase tracking-widest text-[10px]">{row.label}</span>
-                                        <span className="ml-auto font-bold text-primary">{row.display}</span>
-                                        {copied === row.key
-                                            ? <Check className="h-4 w-4 shrink-0 text-nature" />
-                                            : <Copy className="h-4 w-4 shrink-0 text-muted" />}
-                                    </button>
-                                ))}
-                            </div>
-                            <p className="mt-2 text-[10px] text-muted">Or pay manually: copy the ID and the exact amount into your UPI app.</p>
+                            {/* One tap into the UPI app, amount already filled. Only works
+                                on a phone — desktop browsers have no UPI app to hand off
+                                to, which is why the QR above stays: it's the desktop path
+                                (scan from another device) and the fallback if a bank
+                                declines the intent. */}
+                            <a
+                                href={upiIntentUrl}
+                                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-nature py-4 px-4 text-sm font-bold text-white shadow-sm transition-all active:scale-95"
+                            >
+                                Pay ₹{paymentAmount} in your UPI app
+                                <ChevronRight className="h-4 w-4 shrink-0" />
+                            </a>
+                            <p className="mt-2 text-center text-[10px] text-muted">
+                                Opens GPay / PhonePe / Paytm with the exact amount filled in. On a computer? Scan the QR above with your phone.
+                            </p>
                         </div>
                     </div>
 
