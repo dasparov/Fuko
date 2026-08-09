@@ -59,6 +59,9 @@ export default function CheckoutPage() {
     // it — so the primary button has to target GPay's own scheme there. Set
     // after mount: reading navigator during render would desync hydration.
     const [isIOS, setIsIOS] = useState(false)
+    // Turns green once tapped, so a buyer who bounces back from their UPI app
+    // can see which button they already used.
+    const [payTapped, setPayTapped] = useState(false)
     useEffect(() => { setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent)) }, [])
 
     // Once authenticated, load the profile and route to the right step.
@@ -484,9 +487,9 @@ export default function CheckoutPage() {
         // reading navigator during render desyncs hydration, and one extra row
         // of buttons costs far less than that bug.
         const UPI_APPS = [
-            { name: "GPay", url: `tez://upi/pay?${upiParams}`, dot: "#4285F4" },
-            { name: "PhonePe", url: `phonepe://pay?${upiParams}`, dot: "#5F259F" },
-            { name: "Paytm", url: `paytmmp://pay?${upiParams}`, dot: "#00BAF2" },
+            { name: "GPay", url: `tez://upi/pay?${upiParams}`, icon: "/upi-googlepay.svg" },
+            { name: "PhonePe", url: `phonepe://pay?${upiParams}`, icon: "/upi-phonepe.svg" },
+            { name: "Paytm", url: `paytmmp://pay?${upiParams}`, icon: "/upi-paytm.svg" },
         ]
         // iOS: skip the generic scheme entirely, it lands in WhatsApp.
         const primaryPayUrl = isIOS ? UPI_APPS[0].url : upiIntentUrl
@@ -630,10 +633,12 @@ export default function CheckoutPage() {
                             The QR below is the desktop route and the fallback. */}
                         <a
                             href={primaryPayUrl}
-                            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 px-4 text-base font-bold text-white shadow-sm transition-all hover:bg-accent active:scale-95"
+                            onClick={() => setPayTapped(true)}
+                            className={`flex w-full items-center justify-center gap-2 rounded-2xl py-4 px-4 text-base font-bold text-white shadow-sm transition-all active:scale-95 ${payTapped ? "bg-nature" : "bg-primary hover:bg-accent"}`}
                         >
-                            Pay ₹{paymentAmount}{isIOS ? " with GPay" : ""}
-                            <ChevronRight className="h-5 w-5 shrink-0" />
+                            {payTapped
+                                ? <><Check className="h-5 w-5 shrink-0" /> Opened — finish in your UPI app</>
+                                : <>Pay ₹{paymentAmount}{isIOS ? " with GPay" : ""}<ChevronRight className="h-5 w-5 shrink-0" /></>}
                         </a>
                         <div className="mt-3 flex items-center justify-center gap-2">
                             {UPI_APPS.map(app => (
@@ -642,7 +647,8 @@ export default function CheckoutPage() {
                                     href={app.url}
                                     className="flex flex-1 flex-col items-center gap-1.5 rounded-xl border border-muted/15 bg-white py-3 text-[11px] font-bold text-primary shadow-sm transition-colors hover:border-accent"
                                 >
-                                    <span className="h-5 w-5 rounded-full" style={{ backgroundColor: app.dot }} />
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={app.icon} alt="" className="h-5 w-5 opacity-80" />
                                     {app.name}
                                 </a>
                             ))}
