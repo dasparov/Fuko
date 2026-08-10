@@ -3,8 +3,8 @@
 import { Button } from "@/components/ui/Button"
 import { AuthPanel } from "@/components/auth/AuthPanel"
 import { useCart } from "@/context/CartContext"
-import { saveOrderAction, confirmOrderPaymentAction, getUserProfileAction, updateUserProfileAction } from "@/app/actions"
-import { Order, OrderStatus, DeliveryAddress } from "@/lib/orders"
+import { saveOrderAction, confirmOrderPaymentAction, getUserProfileAction, updateUserProfileAction, getProductsAction } from "@/app/actions"
+import { Order, OrderStatus, DeliveryAddress, soldOutItems } from "@/lib/orders"
 import { ArrowLeft, Check, Copy, MapPin, CreditCard, ChevronRight, User, Image as ImageIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -91,6 +91,32 @@ export default function CheckoutPage() {
 
         return () => { cancelled = true }
     }, [isLoggedIn, userId])
+
+    // Stock gate. The card and product-page buttons stop a sold-out blend being
+    // added, but a cart survives in localStorage, so it can outlive the admin
+    // flipping that blend to Sold Out. This is the check against live catalogue
+    // truth, and it sits BEFORE the payment screen on purpose: refusing the
+    // order write instead would risk taking a UPI payment we never recorded.
+    const [soldOut, setSoldOut] = useState<string[]>([])
+    useEffect(() => {
+        if (!hydrated || items.length === 0) return
+        let cancelled = false
+        ;(async () => {
+            const catalogue = await getProductsAction()
+            if (!cancelled) setSoldOut(soldOutItems(items, catalogue))
+        })()
+        return () => { cancelled = true }
+    }, [hydrated, items])
+
+    // Someone already standing on the payment screen when the stock check comes
+    // back gets walked back to the address step rather than left staring at a QR
+    // for something we cannot ship.
+    useEffect(() => {
+        if (soldOut.length > 0 && step === "payment") {
+            setStep("address")
+            toast.error(`${soldOut.join(", ")} just sold out — please remove it from your cart.`)
+        }
+    }, [soldOut, step])
 
     // Redirect if cart is empty (except on the final confirmation screen).
     // Wait for the cart to hydrate first, otherwise the brief pre-load empty
@@ -271,7 +297,9 @@ export default function CheckoutPage() {
             })
 
             toast.success(`Perfect, ${onboardingName.split(' ')[0]}! Ready for delivery.`)
-            setStep("payment")
+            // Onboarding jumps straight past the address step, so it needs the
+            // same stock gate that button carries.
+            setStep(soldOut.length > 0 ? "address" : "payment")
         }
 
         return (
@@ -449,11 +477,16 @@ export default function CheckoutPage() {
                 {/* Continue Button */}
                 <div className="fixed bottom-20 left-0 w-full bg-background px-6 py-6 border-t border-muted/10">
                     <div className="mx-auto w-full max-w-xl">
+                        {soldOut.length > 0 && (
+                            <p className="mb-4 rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">
+                                {soldOut.join(", ")} {soldOut.length === 1 ? "is" : "are"} sold out. Remove {soldOut.length === 1 ? "it" : "them"} from your cart to continue.
+                            </p>
+                        )}
                         <Button
                             size="pill"
                             variant="pill"
                             className="w-full"
-                            disabled={!selectedAddress}
+                            disabled={!selectedAddress || soldOut.length > 0}
                             onClick={() => setStep("payment")}
                         >
                             Continue to Payment <ChevronRight className="ml-2 h-5 w-5" />

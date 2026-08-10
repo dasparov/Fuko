@@ -18,9 +18,12 @@ interface ProductCardProps {
     images: string[]
     tag?: { label: string, color: "accent" | "nature" }
     className?: string
+    // Defaults true so a caller that has not been taught about stock still
+    // renders a buyable card rather than silently hiding the Add button.
+    isAvailable?: boolean
 }
 
-export function ProductCard({ id, name, price, description, images, tag, className }: ProductCardProps) {
+export function ProductCard({ id, name, price, description, images, tag, className, isAvailable = true }: ProductCardProps) {
     const { addItem } = useCart()
     const [isAdding, setIsAdding] = useState(false)
     const [isImageLoaded, setIsImageLoaded] = useState(false)
@@ -29,6 +32,9 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
         e.preventDefault() // Prevent navigation if clicking the button inside a Link
         e.stopPropagation()
 
+        // The button is disabled too; this is the guard that survives a stray
+        // programmatic click or a stale render.
+        if (!isAvailable) return
         if (isAdding) return
 
         setIsAdding(true)
@@ -54,12 +60,21 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
             className={cn("relative shrink-0 snap-start group", className || "w-[280px]")}
         >
             <Link href={`/product/${id}`} className="block">
-                <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-paper">
-                    {tag && (
+                <div className={cn(
+                    "relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-paper",
+                    !isAvailable && "grayscale-[0.6] opacity-70"
+                )}>
+                    {/* Sold Out outranks the marketing tag: they share this corner,
+                        and stock is the thing a buyer must not miss. */}
+                    {!isAvailable ? (
+                        <span className="absolute left-4 top-4 z-10 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                            Sold Out
+                        </span>
+                    ) : tag ? (
                         <span className={`absolute left-4 top-4 z-10 rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm ${tag.color === 'accent' ? 'bg-accent' : 'bg-nature'}`}>
                             {tag.label}
                         </span>
-                    )}
+                    ) : null}
 
                     <motion.div
                         whileHover={{ scale: 1.05 }}
@@ -100,9 +115,11 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
                         size="sm"
                         className={`rounded-full transition-all duration-300 ${isAdding ? 'bg-green-600 px-4' : ''}`}
                         onClick={handleAdd}
-                        disabled={isAdding}
+                        disabled={isAdding || !isAvailable}
                     >
-                        {isAdding ? (
+                        {!isAvailable ? (
+                            "Sold Out"
+                        ) : isAdding ? (
                             <span className="flex items-center gap-1 animate-in fade-in zoom-in duration-300">
                                 <Check className="h-3 w-3" />
                                 Added

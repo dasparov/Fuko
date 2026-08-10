@@ -307,6 +307,7 @@ export default function Home() {
                 description={product.description}
                 images={product.images}
                 tag={product.tag}
+                isAvailable={product.isAvailable}
                 className="w-[280px] md:w-full"
               />
             ))

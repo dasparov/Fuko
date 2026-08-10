@@ -110,6 +110,9 @@ export default function ProductPage() {
     const tags = product.tag ? [product.tag.label] : [];
 
     const handleAddToCart = () => {
+        // Mirrors the disabled button: stock is checked here too so a stale
+        // render or a stray click cannot put a sold-out blend in the cart.
+        if (!product.isAvailable) return;
         if (isAdding) return;
 
         setIsAdding(true);
@@ -229,7 +232,12 @@ export default function ProductPage() {
                                 {product.weight}
                             </p>
                         )}
-                        <div className="mt-2 flex gap-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
+                            {!product.isAvailable && (
+                                <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
+                                    Sold Out
+                                </span>
+                            )}
                             {tags.map((tag) => (
                                 <span
                                     key={tag}
@@ -320,9 +328,11 @@ export default function ProductPage() {
                         size="pill"
                         className={`flex-1 font-bold overflow-hidden transition-all duration-300 ${isAdding ? 'bg-green-600 scale-105' : ''}`}
                         onClick={handleAddToCart}
-                        disabled={isAdding}
+                        disabled={isAdding || !product.isAvailable}
                     >
-                        {isAdding ? (
+                        {!product.isAvailable ? (
+                            <>Sold Out</>
+                        ) : isAdding ? (
                             <span className="flex items-center justify-center gap-2 animate-pulse">
                                 <Check className="h-5 w-5" />
                                 Added!

@@ -58,14 +58,15 @@ export default function ShopPage() {
                     </div>
                 ) : (
                     products.map(product => (
-                        <div key={product.id} className={!product.isAvailable ? "opacity-75 grayscale-[0.5]" : ""}>
+                        <div key={product.id}>
                             <ProductCard
                                 id={product.id}
                                 name={product.name}
                                 price={product.price}
                                 description={product.description}
                                 images={product.images}
-                                tag={!product.isAvailable ? { label: "Sold Out", color: "nature" } : product.tag}
+                                tag={product.tag}
+                                isAvailable={product.isAvailable}
                                 className="w-full"
                             />
                             {!product.isAvailable && (

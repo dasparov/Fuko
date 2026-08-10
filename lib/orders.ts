@@ -46,6 +46,24 @@ export interface Order {
 export const countsAsSale = (o: Order) =>
     o.status !== "Awaiting Payment" && (o.status !== "Processing" || Boolean(o.isPaymentVerified))
 
+// Names of cart lines the catalogue no longer sells, so checkout can refuse a
+// cart that was filled before the admin flipped a blend to Sold Out. Absence
+// from the catalogue counts too — that is what a hidden or deleted product
+// looks like from here.
+//
+// Fails OPEN on an empty catalogue: getProductsAction swallows a Postgres error
+// into [], and blocking every checkout during a database blip costs more than
+// the occasional oversold pack, which is refundable.
+export function soldOutItems(
+    items: { id: string; name: string }[],
+    catalogue: { id: string; isAvailable: boolean }[]
+): string[] {
+    if (catalogue.length === 0) return []
+    return items
+        .filter(i => !catalogue.some(p => p.id === i.id && p.isAvailable))
+        .map(i => i.name)
+}
+
 const STORAGE_KEY = "fuko_orders"
 
 export function getOrders(): Order[] {
