@@ -237,7 +237,7 @@ export default function ProductPage() {
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                             {!product.isAvailable && (
                                 <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white">
-                                    Sold Out
+                                    Out of Season
                                 </span>
                             )}
                             {tags.map((tag) => (
@@ -335,7 +335,7 @@ export default function ProductPage() {
                         disabled={isAdding || !product.isAvailable}
                     >
                         {!product.isAvailable ? (
-                            <>Sold Out</>
+                            <>Out of Season</>
                         ) : isAdding ? (
                             <span className="flex items-center justify-center gap-2 animate-pulse">
                                 <Check className="h-5 w-5" />

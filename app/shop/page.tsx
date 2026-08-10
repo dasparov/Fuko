@@ -70,7 +70,7 @@ export default function ShopPage() {
                                 className="w-full"
                             />
                             {!product.isAvailable && (
-                                <p className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-nature">Restocking from the archives soon</p>
+                                <p className="mt-2 text-center text-[10px] font-black uppercase tracking-widest text-nature">Back when the new crop is cured</p>
                             )}
                         </div>
                     ))

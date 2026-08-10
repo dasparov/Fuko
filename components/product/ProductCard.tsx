@@ -66,11 +66,11 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
                     "relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-paper",
                     !isAvailable && "grayscale-[0.6] opacity-70"
                 )}>
-                    {/* Sold Out outranks the marketing tag: they share this corner,
+                    {/* Out of Season outranks the marketing tag: they share this corner,
                         and stock is the thing a buyer must not miss. */}
                     {!isAvailable ? (
                         <span className="absolute left-4 top-4 z-10 rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                            Sold Out
+                            Out of Season
                         </span>
                     ) : tag ? (
                         <span className={`absolute left-4 top-4 z-10 rounded-full px-3 py-1 text-xs font-bold text-white shadow-sm ${tag.color === 'accent' ? 'bg-accent' : 'bg-nature'}`}>
@@ -128,7 +128,7 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
                         disabled={isAdding || !isAvailable}
                     >
                         {!isAvailable ? (
-                            "Sold Out"
+                            "Out of Season"
                         ) : isAdding ? (
                             <span className="flex items-center gap-1 animate-in fade-in zoom-in duration-300">
                                 <Check className="h-3 w-3" />

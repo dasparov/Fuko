@@ -1,3 +1,5 @@
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import { BlendCharacter, SCALE_MAX, dotPosition } from "@/lib/blend-character"
 import { cn } from "@/lib/utils"
 
@@ -78,6 +80,12 @@ export function BlendMeters({ character }: { character?: BlendCharacter }) {
                     <p className="mt-1 text-sm italic leading-relaxed text-muted">
                         {character.curing.note}
                     </p>
+                    <Link
+                        href="/field-notes"
+                        className="mt-3 inline-flex items-center gap-1 text-[11px] font-black uppercase tracking-[0.15em] text-accent underline-offset-4 hover:underline"
+                    >
+                        What curing does <ArrowRight className="h-3 w-3" />
+                    </Link>
                 </div>
             )}
         </div>

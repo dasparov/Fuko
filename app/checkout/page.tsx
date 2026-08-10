@@ -114,7 +114,7 @@ export default function CheckoutPage() {
     useEffect(() => {
         if (soldOut.length > 0 && step === "payment") {
             setStep("address")
-            toast.error(`${soldOut.join(", ")} just sold out — please remove it from your cart.`)
+            toast.error(`${soldOut.join(", ")} is out of season — please remove it from your cart.`)
         }
     }, [soldOut, step])
 
@@ -479,7 +479,7 @@ export default function CheckoutPage() {
                     <div className="mx-auto w-full max-w-xl">
                         {soldOut.length > 0 && (
                             <p className="mb-4 rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">
-                                {soldOut.join(", ")} {soldOut.length === 1 ? "is" : "are"} sold out. Remove {soldOut.length === 1 ? "it" : "them"} from your cart to continue.
+                                {soldOut.join(", ")} {soldOut.length === 1 ? "is" : "are"} out of season. Remove {soldOut.length === 1 ? "it" : "them"} from your cart to continue.
                             </p>
                         )}
                         <Button
