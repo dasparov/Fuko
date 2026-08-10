@@ -104,20 +104,29 @@ export default function FieldNotesPage() {
                     shelf, and a customer who lands here from an out-of-season blend is
                     looking for exactly this. */}
                 <section className="mt-14 rounded-3xl bg-paper/60 p-8">
-                    <h2 className="font-heading text-2xl font-bold">One harvest a year</h2>
+                    <h2 className="font-heading text-2xl font-bold">Two seasons, one field</h2>
                     <p className="mt-4 leading-relaxed text-muted">
-                        Tobacco here is a <span className="font-bold text-primary">rabi</span> crop
-                        — sown as the monsoon pulls back in October, grown on the water the
-                        soil kept, cut through the winter. Rabi is simply the Arabic word for
-                        spring, borrowed centuries ago for the harvest that arrives at the end
-                        of the cold season. The other half of the farming year, the monsoon
-                        planting, is <span className="italic">kharif</span>.
+                        The Indian farming year splits in two.{" "}
+                        <span className="font-bold text-primary">Kharif</span> goes into the
+                        ground with the monsoon in June and comes off in autumn — it drinks
+                        the rain as it falls.{" "}
+                        <span className="font-bold text-primary">Rabi</span> goes in as the
+                        monsoon pulls back in October, lives on the water the soil kept behind,
+                        and is cut through the winter.
                     </p>
                     <p className="mt-4 leading-relaxed text-muted">
-                        One cutting a year means a blend runs out the way anything grown runs
-                        out. We do not reconstitute leaf, and we do not pad a season with the
-                        last one to keep a shelf full. When a blend is out of season it is out
-                        of season, and it comes back when the new crop is cured.
+                        Both names are borrowed Arabic, and both describe the gathering rather
+                        than the sowing: <span className="italic">kharif</span> is autumn,{" "}
+                        <span className="italic">rabi</span> is spring. Two harvests, the same
+                        field, twice a year.
+                    </p>
+                    <p className="mt-4 leading-relaxed text-muted">
+                        Tobacco grows in both, and the season shows up in the leaf. Rain-grown
+                        leaf and leaf raised on what the ground held back are not the same
+                        thing, even from the same seed in the same soil — which is why a blend
+                        belongs to the season that made it. When that season's leaf is gone we
+                        do not reconstitute it and we do not pad it with the last crop to keep
+                        a shelf full. It comes back when the crop does.
                     </p>
                 </section>
 
