@@ -244,6 +244,36 @@ keeping, backup discarded.
 prod and live. Existing orders have it `NULL` → `undefined`, so they simply
 carry no tracking line until the admin types one.
 
+## ⚠ Deploys are broken, and main is ahead of production (2026-08-10)
+
+**The newest Vercel deployment is hours older than `main`.** Pushing to `main`
+stopped triggering a build partway through 2026-08-10. Nothing is failing —
+`vercel ls` shows every deployment `Ready`, there are just no new ones. The
+GitHub integration is not firing. Diagnose that first; until it is fixed,
+**a green `git push` does not mean the site changed.**
+
+Verified live before it broke: the favicon, the blend meters, `/field-notes`.
+Everything after that is committed and pushed but **not on the site**: the
+mobile padding fix, the accent dot colour, the two-season correction, the nav
+link, the soils rewrite, and the copy pass.
+
+To ship manually: `npx -y vercel@latest --prod --yes` from the repo root.
+
+**Before running it, read the next item.** A manual deploy ships everything on
+`main`, including the copy pass the owner has not approved.
+
+## TODO: site-wide copy pass is written but NOT approved (`286ebf9`)
+
+The humanizer pass over customer-facing copy is committed on `main` and was
+deliberately **not deployed** — the owner wants to read it first. It changes
+the homepage values block, the six WhatsApp messages, the age gate and the
+support page. Terms and privacy were left alone on purpose (plain neutral is
+the correct voice for legal text). The four product descriptions live in
+Postgres and are untouched.
+
+If the owner rejects it, revert `286ebf9`. If deploys are fixed before he
+reviews it, this ships with them — move it to a branch if it needs holding back.
+
 ## Open TODOs (next session)
 
 0. **Read the WhatsApp message copy in `lib/whatsapp.ts` (lines 18-24) and
