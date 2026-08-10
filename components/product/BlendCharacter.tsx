@@ -26,7 +26,9 @@ export function BlendDots({ character, className }: { character?: BlendCharacter
                         key={i}
                         className={cn(
                             "h-[5px] w-[5px] rounded-full",
-                            i < character.body ? "bg-primary" : "bg-muted/25"
+                            // Same accent the product-page meter marks body with,
+                            // so the axis is one colour wherever it appears.
+                            i < character.body ? "bg-accent" : "bg-muted/25"
                         )}
                     />
                 ))}
