@@ -21,27 +21,27 @@ const VALUES = [
   {
     title: "Unadulterated Purity",
     body: "We define ourselves by what we don't have. No chemicals. No casings. Just leaf.",
-    note: "We define our quality by what we leave out. No chemical additives, no expanded fillers, no artificial casings. Whole-leaf tobacco, hand-stripped, cured slowly under the Indian sun.",
+    note: "We define our quality by what we leave out. No chemical additives, no expanded fillers, no artificial casings — 100% whole-leaf tobacco, hand-stripped and slow-cured by the Indian sun.",
   },
   {
     title: "Whole-Leaf Quality",
-    body: "Never expanded tobacco or scraps. Only prime leaf, chosen for structure and an even burn.",
-    note: "India has grown world-class tobacco for five centuries, and the smoker still ends up with an industrial commodity. Fuko is the other option: prime leaf chosen for structure and burn, never scraps.",
+    body: "Never expanded tobacco or scraps — only prime leaf structure, for a consistent burn.",
+    note: "India has grown world-class tobacco for five centuries, yet the modern smoker is left with industrial commodities. Fuko exists to change that narrative — prime leaf chosen for structure and burn, never scraps.",
   },
   {
     title: "Radical Transparency",
-    body: "The supply chain is open from the field to the pouch. You know exactly what you're smoking.",
-    note: "You should know your farmer. Ours runs a direct line from fields in Andhra, Tamil Nadu and Karnataka to the pouch in your hand.",
+    body: "From the soil to the pouch, the supply chain is open. You know exactly what you're smoking.",
+    note: "You should know your farmer. Our supply chain is a direct line from the heritage fields of Andhra, Tamil Nadu, and Karnataka straight to your pouch.",
   },
   {
     title: "Sovereign Craft",
     body: "For 500 years India has grown the world's best tobacco. We're keeping the best of the harvest here.",
-    note: "In the late 1500s the Portuguese anchored in Goa carrying the first tobacco seeds from the New World. The leaf moved inland from there and stayed. Fuko starts at that same gateway, treating India as somewhere craft comes from rather than raw material.",
+    note: "In the late 1500s the Portuguese anchored in Goa carrying the first tobacco seeds from the New World. From those shores the leaf traveled inland and became part of our agricultural identity. Fuko is rooted in that gateway — India as a destination for craft, not a source of raw material.",
   },
   {
     title: "Terroir First",
-    body: "We don't manufacture flavor, we pick it. Regur Black from Guntur, Kavery Bright from Mysore. The soil does the work.",
-    note: "Rolling your own is a short pause inside a 500-year-old craft that started right here in Goa. Find the soil you like best, and give the leaf its due.",
+    body: "We don't manufacture flavor; we curate it. Regur Black from Guntur, Kavery Bright from Mysore — the soil does the work.",
+    note: "Rolling your own is a brief pause to engage with a 500-year-old craft that started right here in Goa. Discover your preferred soil, and reclaim the dignity of the leaf.",
   },
 ];
 

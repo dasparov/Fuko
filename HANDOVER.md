@@ -262,17 +262,41 @@ To ship manually: `npx -y vercel@latest --prod --yes` from the repo root.
 **Before running it, read the next item.** A manual deploy ships everything on
 `main`, including the copy pass the owner has not approved.
 
-## TODO: site-wide copy pass is written but NOT approved (`286ebf9`)
+## TODO: the humanized copy pass is parked, not lost
 
-The humanizer pass over customer-facing copy is committed on `main` and was
-deliberately **not deployed** — the owner wants to read it first. It changes
-the homepage values block, the six WhatsApp messages, the age gate and the
-support page. Terms and privacy were left alone on purpose (plain neutral is
-the correct voice for legal text). The four product descriptions live in
-Postgres and are untouched.
+A humanizer pass over customer-facing copy was written on 2026-08-10, then
+**reverted off `main` before deploying** so the site kept its current wording
+until the owner reads it. The site is running the ORIGINAL copy.
 
-If the owner rejects it, revert `286ebf9`. If deploys are fixed before he
-reviews it, this ships with them — move it to a branch if it needs holding back.
+**Where it lives:** `docs/copy/0001-fix-site-copy-loses-its-AI-tells.patch`
+
+To bring it back:
+
+```
+git apply docs/copy/0001-fix-site-copy-loses-its-AI-tells.patch
+npm test          # the whatsapp test asserts wording, see below
+```
+
+What it changes, and why it was worth doing:
+
+- **Homepage `VALUES`** — "Fuko exists to change that narrative", "rooted in
+  that gateway", "reclaim the dignity of the leaf" and "we don't manufacture
+  flavor; we curate it" are aphorism-shaped lines that sound profound and say
+  little. Em dashes removed throughout.
+- **The six WhatsApp messages** — emoji and exclamation marks dropped so they
+  read like a person typing. This also settles the older TODO about that copy
+  being a Claude-written first draft.
+- **Age gate** — drops "premium blends". **Support** — drops "here to assist
+  you with any questions".
+- **`lib/whatsapp.test.ts`** — asserted `'Hi there!'` *including the
+  punctuation*, which made the copy unchangeable. The patch loosens it to
+  `'Hi there'`, the name fallback it was actually testing. Reverting restored
+  the strict version, so re-applying the patch is what keeps the suite green.
+
+Left alone deliberately, and should stay that way: **terms and privacy** (plain
+neutral IS the human voice for legal text) and **the four product
+descriptions**, which live in Postgres rather than the repo and are the
+strongest copy on the site already.
 
 ## Open TODOs (next session)
 

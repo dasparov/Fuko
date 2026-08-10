@@ -1,0 +1,174 @@
+From 286ebf9c5f23e0dbee26982c2051c2267536de6c Mon Sep 17 00:00:00 2001
+From: Kapil Das <kapil.das@gmail.com>
+Date: Mon, 10 Aug 2026 16:07:09 +0530
+Subject: [PATCH] fix: site copy loses its AI tells
+
+Ran the humanizer over the copy a customer actually reads.
+
+Homepage values carried the clearest ones: 'Fuko exists to change that
+narrative', 'rooted in that gateway', 'reclaim the dignity of the leaf', and
+'we don't manufacture flavor; we curate it' were all aphorism-shaped sentences
+that sound profound and say little. Em dashes throughout are gone.
+
+WhatsApp messages lost their emoji and exclamation marks and now read like a
+person typing. The Cancelled message says what happens to the money instead of
+promising a refund in policy language. Its test asserted 'Hi there!' including
+the punctuation, which made the copy unchangeable, so it now asserts the
+fallback name it was actually about.
+
+Age gate dropped 'premium blends'. Support dropped 'here to assist you with any
+questions'.
+
+Terms and privacy are untouched on purpose: plain neutral IS the human voice
+for legal text, and humanizing it would make it worse. The four product
+descriptions live in Postgres, not in the repo, so they are unchanged.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
+---
+ app/page.tsx              | 16 ++++++++--------
+ app/support/page.tsx      |  6 +++---
+ components/ui/AgeGate.tsx |  4 ++--
+ lib/whatsapp.test.ts      |  4 +++-
+ lib/whatsapp.ts           | 12 ++++++------
+ next-env.d.ts             |  2 +-
+ 6 files changed, 23 insertions(+), 21 deletions(-)
+
+diff --git a/app/page.tsx b/app/page.tsx
+index 7e05a4a..5c0b4b8 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -21,27 +21,27 @@ const VALUES = [
+   {
+     title: "Unadulterated Purity",
+     body: "We define ourselves by what we don't have. No chemicals. No casings. Just leaf.",
+-    note: "We define our quality by what we leave out. No chemical additives, no expanded fillers, no artificial casings — 100% whole-leaf tobacco, hand-stripped and slow-cured by the Indian sun.",
++    note: "We define our quality by what we leave out. No chemical additives, no expanded fillers, no artificial casings. Whole-leaf tobacco, hand-stripped, cured slowly under the Indian sun.",
+   },
+   {
+     title: "Whole-Leaf Quality",
+-    body: "Never expanded tobacco or scraps — only prime leaf structure, for a consistent burn.",
+-    note: "India has grown world-class tobacco for five centuries, yet the modern smoker is left with industrial commodities. Fuko exists to change that narrative — prime leaf chosen for structure and burn, never scraps.",
++    body: "Never expanded tobacco or scraps. Only prime leaf, chosen for structure and an even burn.",
++    note: "India has grown world-class tobacco for five centuries, and the smoker still ends up with an industrial commodity. Fuko is the other option: prime leaf chosen for structure and burn, never scraps.",
+   },
+   {
+     title: "Radical Transparency",
+-    body: "From the soil to the pouch, the supply chain is open. You know exactly what you're smoking.",
+-    note: "You should know your farmer. Our supply chain is a direct line from the heritage fields of Andhra, Tamil Nadu, and Karnataka straight to your pouch.",
++    body: "The supply chain is open from the field to the pouch. You know exactly what you're smoking.",
++    note: "You should know your farmer. Ours runs a direct line from fields in Andhra, Tamil Nadu and Karnataka to the pouch in your hand.",
+   },
+   {
+     title: "Sovereign Craft",
+     body: "For 500 years India has grown the world's best tobacco. We're keeping the best of the harvest here.",
+-    note: "In the late 1500s the Portuguese anchored in Goa carrying the first tobacco seeds from the New World. From those shores the leaf traveled inland and became part of our agricultural identity. Fuko is rooted in that gateway — India as a destination for craft, not a source of raw material.",
++    note: "In the late 1500s the Portuguese anchored in Goa carrying the first tobacco seeds from the New World. The leaf moved inland from there and stayed. Fuko starts at that same gateway, treating India as somewhere craft comes from rather than raw material.",
+   },
+   {
+     title: "Terroir First",
+-    body: "We don't manufacture flavor; we curate it. Regur Black from Guntur, Kavery Bright from Mysore — the soil does the work.",
+-    note: "Rolling your own is a brief pause to engage with a 500-year-old craft that started right here in Goa. Discover your preferred soil, and reclaim the dignity of the leaf.",
++    body: "We don't manufacture flavor, we pick it. Regur Black from Guntur, Kavery Bright from Mysore. The soil does the work.",
++    note: "Rolling your own is a short pause inside a 500-year-old craft that started right here in Goa. Find the soil you like best, and give the leaf its due.",
+   },
+ ];
+ 
+diff --git a/app/support/page.tsx b/app/support/page.tsx
+index c99657d..39d1168 100644
+--- a/app/support/page.tsx
++++ b/app/support/page.tsx
+@@ -21,7 +21,7 @@ export default function SupportPage() {
+                 {/* Intro */}
+                 <div className="text-center space-y-2">
+                     <h2 className="text-2xl font-bold text-gray-900">How can we help?</h2>
+-                    <p className="text-gray-500">We&apos;re here to assist you with any questions.</p>
++                    <p className="text-gray-500">Ask us anything about an order and we&apos;ll answer.</p>
+                 </div>
+ 
+                 {/* Contact Cards */}
+@@ -32,7 +32,7 @@ export default function SupportPage() {
+                         </div>
+                         <div>
+                             <h3 className="font-semibold text-gray-900">Email Us</h3>
+-                            <p className="text-sm text-gray-500 mt-1">For general inquiries and order support.</p>
++                            <p className="text-sm text-gray-500 mt-1">For questions about an order, or anything else.</p>
+                             <a href="mailto:thegoatradingco@gmail.com" className="text-blue-600 font-medium text-sm mt-2 inline-block hover:underline">
+                                 thegoatradingco@gmail.com
+                             </a>
+@@ -51,7 +51,7 @@ export default function SupportPage() {
+                         </div>
+                         <div className="p-4 border-b border-gray-100">
+                             <h4 className="font-medium text-gray-900">Do you offer refunds?</h4>
+-                            <p className="text-sm text-gray-500 mt-2">Yes, simply email us within 7 days of receiving your order if you face any quality issues.</p>
++                            <p className="text-sm text-gray-500 mt-2">Yes. Email us within 7 days of getting your order if there is a problem with the leaf.</p>
+                         </div>
+                         <div className="p-4">
+                             <h4 className="font-medium text-gray-900">How long does shipping take?</h4>
+diff --git a/components/ui/AgeGate.tsx b/components/ui/AgeGate.tsx
+index fd94802..800dfd7 100644
+--- a/components/ui/AgeGate.tsx
++++ b/components/ui/AgeGate.tsx
+@@ -52,8 +52,8 @@ export function AgeGate() {
+ 
+                         <h2 className="font-heading text-3xl font-bold mb-4 tracking-tight">Access Restricted</h2>
+                         <div className="text-muted mb-10 text-sm font-medium space-y-1">
+-                            <p>Fuko creates premium blends for adults only.</p>
+-                            <p>Verify you are 21+ to enter the archives.</p>
++                            <p>Fuko sells rolling tobacco, for adults only.</p>
++                            <p>Confirm you are 21 or over to enter the archives.</p>
+                         </div>
+ 
+                         <div className="space-y-4">
+diff --git a/lib/whatsapp.test.ts b/lib/whatsapp.test.ts
+index 906c7fb..e9da141 100644
+--- a/lib/whatsapp.test.ts
++++ b/lib/whatsapp.test.ts
+@@ -47,7 +47,9 @@ describe('whatsappMessage', () => {
+     })
+ 
+     it('falls back to a greeting when the order has no customer name', () => {
+-        expect(whatsappMessage(order({ customerName: undefined }))).toContain('Hi there!')
++        // Asserts the fallback name, not the punctuation around it, so the copy
++        // stays free to change without breaking this.
++        expect(whatsappMessage(order({ customerName: undefined }))).toContain('Hi there')
+     })
+ 
+     it('quotes the exact UPI amount so it matches the payment feed', () => {
+diff --git a/lib/whatsapp.ts b/lib/whatsapp.ts
+index fd1343d..ec35738 100644
+--- a/lib/whatsapp.ts
++++ b/lib/whatsapp.ts
+@@ -16,12 +16,12 @@ export function whatsappMessage(order: Order): string {
+     const tracking = order.trackingId ? ` Tracking number: ${order.trackingId}.` : ""
+ 
+     const byStatus: Record<OrderStatus, string> = {
+-        "Awaiting Payment": `Hi ${name}! We're holding your Fuko order ${order.id} — ${items} — but the ₹${amount} payment hasn't reached us yet. Reply here if you ran into trouble paying and we'll sort it out.`,
+-        "Processing": `Hi ${name}! Your Fuko order ${order.id} is confirmed — ${items}, ₹${amount} received ✅ Shipping in 1-2 days.`,
+-        "Shipped": `Hi ${name}! Your Fuko order ${order.id} — ${items} — has shipped 📦${tracking} We'll message you again when it's out for delivery.`,
+-        "Out for Delivery": `Hi ${name}! Your Fuko order ${order.id} is out for delivery today 🛵${tracking} Please keep your phone reachable for the delivery partner.`,
+-        "Delivered": `Hi ${name}! Your Fuko order ${order.id} has been delivered ✅ Hope you love it — reply here if anything isn't right.`,
+-        "Cancelled": `Hi ${name}, your Fuko order ${order.id} — ${items} — has been cancelled. Anything you've already paid will be refunded to the same UPI account. Reply here if you have questions.`,
++        "Awaiting Payment": `Hi ${name}, we're holding your Fuko order ${order.id} (${items}), but the ₹${amount} payment hasn't reached us yet. Reply here if you ran into trouble paying and we'll sort it out.`,
++        "Processing": `Hi ${name}, your Fuko order ${order.id} is confirmed. ${items}, ₹${amount} received. It goes out in a day or two.`,
++        "Shipped": `Hi ${name}, your Fuko order ${order.id} (${items}) has shipped.${tracking} We'll message you again when it's out for delivery.`,
++        "Out for Delivery": `Hi ${name}, your Fuko order ${order.id} is out for delivery today.${tracking} Please keep your phone reachable for the delivery partner.`,
++        "Delivered": `Hi ${name}, your Fuko order ${order.id} has been delivered. Hope it's good. Reply here if anything isn't right.`,
++        "Cancelled": `Hi ${name}, your Fuko order ${order.id} (${items}) has been cancelled. Anything you've already paid goes back to the same UPI account. Reply here if you have questions.`,
+     }
+ 
+     return byStatus[order.status]
+diff --git a/next-env.d.ts b/next-env.d.ts
+index c4b7818..9edff1c 100644
+--- a/next-env.d.ts
++++ b/next-env.d.ts
+@@ -1,6 +1,6 @@
+ /// <reference types="next" />
+ /// <reference types="next/image-types/global" />
+-import "./.next/dev/types/routes.d.ts";
++import "./.next/types/routes.d.ts";
+ 
+ // NOTE: This file should not be edited
+ // see https://nextjs.org/docs/app/api-reference/config/typescript for more information.
+-- 
+2.40.1
+
