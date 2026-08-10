@@ -7,6 +7,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { characterOf } from "@/lib/blend-character"
+import { BlendDots } from "./BlendCharacter"
 
 import { motion } from "framer-motion"
 
@@ -109,6 +111,14 @@ export function ProductCard({ id, name, price, description, images, tag, classNa
                     <h3 className="font-heading text-xl font-bold line-clamp-1 h-7">{name}</h3>
                 </Link>
                 <p className="font-body text-sm text-muted line-clamp-2 h-10">{description}</p>
+                {/* Fixed height even when empty. The thumbnails sit in a
+                    horizontal scroller and line up because every slot above is
+                    a fixed height; a non-tobacco product like the clay button
+                    has no dots, and without the reserved space its card would
+                    come up short and break the row. */}
+                <div className="mt-1 flex h-4 items-center">
+                    <BlendDots character={characterOf(id)} />
+                </div>
                 <div className="mt-2 flex items-center justify-between">
                     <span className="font-heading text-lg font-bold">₹{price}</span>
                     <Button

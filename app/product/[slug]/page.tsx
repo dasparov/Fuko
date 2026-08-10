@@ -12,6 +12,8 @@ import { useCart } from "@/context/CartContext";
 import { getProductsAction, Product } from "@/app/actions";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { copyText } from "@/lib/copy-text";
+import { characterOf } from "@/lib/blend-character";
+import { BlendMeters } from "@/components/product/BlendCharacter";
 import { toast } from "sonner";
 
 export default function ProductPage() {
@@ -253,6 +255,8 @@ export default function ProductPage() {
                         <span className="text-xs text-muted">Incl. taxes</span>
                     </div>
                 </div>
+
+                <BlendMeters character={characterOf(product.id)} />
 
                 <div className="mt-8">
                     <h3 className="font-heading text-lg font-bold">Description</h3>

@@ -63,7 +63,11 @@ export const BLEND_CHARACTER: Record<string, BlendCharacter> = {
         finish: 1,
         curing: { name: "Sun-cured", note: "strung on bamboo, dried in open Deccan air" },
     },
-    "dark-soils-blend": { body: 4, finish: 4 },
+    "dark-soils-blend": {
+        body: 4,
+        finish: 4,
+        curing: { name: "Fire-cured", note: "hung over smouldering hardwood until it takes the smoke" },
+    },
 }
 ```
 
@@ -97,10 +101,12 @@ The two notes also do quiet contrast work. Sun-cured is open air and bamboo;
 flue-cured is barns and piped heat with no smoke on the leaf. Read side by side
 they explain why the blends taste different without the copy having to say so.
 
-**`curing` is omitted where unknown.** Dark Soils has no curing process
-recorded yet, and how a leaf was cured is a factual claim about the product — it
-will not be invented to fill the slot. The label renders only when the value is
-present, and the owner supplies the missing one.
+All three processes came from the owner or from his own product copy — Dark
+Soils is "fire-cured over smouldering hardwood" in its description, Light Soils
+is "flue-cured slow". **`curing` is omitted where unknown**: how a leaf was
+cured is a factual claim about the product and will not be invented to fill the
+slot. The label renders only when the value is present, so a future blend with
+no recorded process shows meters and no label.
 
 ### Products with no entry render nothing
 
