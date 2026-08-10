@@ -78,7 +78,9 @@ const SOILS = [
 export default function FieldNotesPage() {
     return (
         <main className="min-h-screen bg-background pb-24 pt-8">
-            <PageContainer>
+            {/* PageContainer only centres and caps width — it adds no horizontal
+                padding by design, so every page supplies its own. */}
+            <PageContainer className="px-6">
                 <Link
                     href="/shop"
                     className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-muted transition-colors hover:text-primary"
