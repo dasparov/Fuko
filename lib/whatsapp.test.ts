@@ -47,7 +47,9 @@ describe('whatsappMessage', () => {
     })
 
     it('falls back to a greeting when the order has no customer name', () => {
-        expect(whatsappMessage(order({ customerName: undefined }))).toContain('Hi there!')
+        // Asserts the fallback name, not the punctuation around it, so the copy
+        // stays free to change without breaking this.
+        expect(whatsappMessage(order({ customerName: undefined }))).toContain('Hi there')
     })
 
     it('quotes the exact UPI amount so it matches the payment feed', () => {

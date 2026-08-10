@@ -21,7 +21,7 @@ export default function SupportPage() {
                 {/* Intro */}
                 <div className="text-center space-y-2">
                     <h2 className="text-2xl font-bold text-gray-900">How can we help?</h2>
-                    <p className="text-gray-500">We&apos;re here to assist you with any questions.</p>
+                    <p className="text-gray-500">Ask us anything about an order and we&apos;ll answer.</p>
                 </div>
 
                 {/* Contact Cards */}
@@ -32,7 +32,7 @@ export default function SupportPage() {
                         </div>
                         <div>
                             <h3 className="font-semibold text-gray-900">Email Us</h3>
-                            <p className="text-sm text-gray-500 mt-1">For general inquiries and order support.</p>
+                            <p className="text-sm text-gray-500 mt-1">For questions about an order, or anything else.</p>
                             <a href="mailto:thegoatradingco@gmail.com" className="text-blue-600 font-medium text-sm mt-2 inline-block hover:underline">
                                 thegoatradingco@gmail.com
                             </a>
@@ -51,7 +51,7 @@ export default function SupportPage() {
                         </div>
                         <div className="p-4 border-b border-gray-100">
                             <h4 className="font-medium text-gray-900">Do you offer refunds?</h4>
-                            <p className="text-sm text-gray-500 mt-2">Yes, simply email us within 7 days of receiving your order if you face any quality issues.</p>
+                            <p className="text-sm text-gray-500 mt-2">Yes. Email us within 7 days of getting your order if there is a problem with the leaf.</p>
                         </div>
                         <div className="p-4">
                             <h4 className="font-medium text-gray-900">How long does shipping take?</h4>
