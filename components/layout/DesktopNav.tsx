@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, ShoppingBag, User } from "lucide-react"
+import { BookOpen, Home, ShoppingBag, User } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -21,6 +21,8 @@ export function DesktopNav() {
 
     const navItems = [
         { href: "/", icon: Home, label: "Home" },
+        // Sits on the discovery side, before the transactional two.
+        { href: "/field-notes", icon: BookOpen, label: "Notes" },
         { href: "/cart", icon: ShoppingBag, label: "Cart" },
         { href: "/profile", icon: User, label: "Account" },
     ]
