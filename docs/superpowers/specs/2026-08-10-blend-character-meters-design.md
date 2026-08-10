@@ -53,7 +53,11 @@ export interface BlendCharacter {
 }
 
 export const BLEND_CHARACTER: Record<string, BlendCharacter> = {
-    "light-soils-blend": { body: 2, finish: 3 },
+    "light-soils-blend": {
+        body: 2,
+        finish: 3,
+        curing: { name: "Flue-cured", note: "hung in barns, cured on piped heat — no smoke touches the leaf" },
+    },
     "turkish-blend": {
         body: 3,
         finish: 1,
@@ -89,10 +93,14 @@ Process name in letterspaced caps at label weight; the note beneath it in the
 muted body face. The note is a fragment, not a sentence — no full stop, no
 adjectives doing sales work the fact already does.
 
-**`curing` is omitted where unknown.** Light Soils and Dark Soils have no curing
-process recorded yet, and how a leaf was cured is a factual claim about the
-product — it will not be invented to fill the slot. The label renders only when
-the value is present, and the owner supplies the missing two.
+The two notes also do quiet contrast work. Sun-cured is open air and bamboo;
+flue-cured is barns and piped heat with no smoke on the leaf. Read side by side
+they explain why the blends taste different without the copy having to say so.
+
+**`curing` is omitted where unknown.** Dark Soils has no curing process
+recorded yet, and how a leaf was cured is a factual claim about the product — it
+will not be invented to fill the slot. The label renders only when the value is
+present, and the owner supplies the missing one.
 
 ### Products with no entry render nothing
 
