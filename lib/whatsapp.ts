@@ -17,8 +17,8 @@ export function whatsappMessage(order: Order): string {
 
     const byStatus: Record<OrderStatus, string> = {
         "Awaiting Payment": `Hi ${name}! We're holding your Fuko order ${order.id} — ${items} — but the ₹${amount} payment hasn't reached us yet. Reply here if you ran into trouble paying and we'll sort it out.`,
-        "Processing": `Hi ${name}! Your Fuko order ${order.id} is confirmed — ${items}, ₹${amount} received ✅ Shipping in 1-2 days.`,
-        "Shipped": `Hi ${name}! Your Fuko order ${order.id} — ${items} — has shipped 📦${tracking} We'll message you again when it's out for delivery.`,
+        "Processing": `Hi ${name}! Your Fuko order ${order.id} is confirmed — ${items}, ₹${amount} received ✅ We ship twice a week, so yours goes out with our next fresh batch.`,
+        "Shipped": `Hi ${name}! Your Fuko order ${order.id} — ${items} — has shipped 📦${tracking}`,
         "Out for Delivery": `Hi ${name}! Your Fuko order ${order.id} is out for delivery today 🛵${tracking} Please keep your phone reachable for the delivery partner.`,
         "Delivered": `Hi ${name}! Your Fuko order ${order.id} has been delivered ✅ Hope you love it — reply here if anything isn't right.`,
         "Cancelled": `Hi ${name}, your Fuko order ${order.id} — ${items} — has been cancelled. Anything you've already paid will be refunded to the same UPI account. Reply here if you have questions.`,

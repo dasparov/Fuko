@@ -41,10 +41,22 @@ export interface Order {
 }
 
 // A sale only counts once the money is accounted for: never while the order is
-// still awaiting payment, and not while Processing until payment is verified.
-// Revenue, top customers and the monthly report all run through this.
+// still awaiting payment, not while Processing until payment is verified, and
+// never once Cancelled. Revenue, top customers and the monthly report all run
+// through this.
 export const countsAsSale = (o: Order) =>
-    o.status !== "Awaiting Payment" && (o.status !== "Processing" || Boolean(o.isPaymentVerified))
+    o.status !== "Awaiting Payment" && o.status !== "Cancelled" && (o.status !== "Processing" || Boolean(o.isPaymentVerified))
+
+export const SHIPPING_FEE = 60
+export const FREE_SHIPPING_OVER = 1500
+
+export const shippingFor = (subtotal: number) => subtotal > FREE_SHIPPING_OVER ? 0 : SHIPPING_FEE
+
+// Order.total includes shipping, so the fee is whatever the items don't explain.
+// Derived rather than recomputed from the current fee: orders placed before
+// shipping was charged have total === items and correctly come out as 0.
+export const orderShipping = (order: Pick<Order, "total" | "items">) =>
+    Math.max(0, Number(order.total) - order.items.reduce((sum, i) => sum + i.price * i.quantity, 0))
 
 // Names of cart lines the catalogue no longer sells, so checkout can refuse a
 // cart that was filled before the admin flipped a blend to Sold Out. Absence

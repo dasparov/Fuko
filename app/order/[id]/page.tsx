@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/Button"
-import { Order } from "@/lib/orders"
+import { Order, orderShipping } from "@/lib/orders"
 import { getOrderByIdAction } from "@/app/actions"
 import { Skeleton } from "@/components/ui/Skeleton"
 import { PageContainer } from "@/components/layout/PageContainer"
@@ -197,11 +197,13 @@ export default function OrderDetailsPage() {
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                                 <span className="text-muted">Subtotal</span>
-                                <span className="font-medium">₹{order.total}</span>
+                                <span className="font-medium">₹{Number(order.total) - orderShipping(order)}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted">Shipping</span>
-                                <span className="font-medium text-nature">Free</span>
+                                {orderShipping(order)
+                                    ? <span className="font-medium">₹{orderShipping(order)}</span>
+                                    : <span className="font-medium text-nature">Free</span>}
                             </div>
                             <div className="my-2 h-[1px] bg-muted/10"></div>
                             <div className="flex justify-between text-base font-bold">

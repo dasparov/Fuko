@@ -268,13 +268,13 @@ export default function ProductPage() {
                 <div className="mt-8">
                     <h3 className="font-heading text-lg font-bold">Delivery</h3>
                     <ul className="mt-2 space-y-2 text-sm text-muted">
-                        <li className="flex items-center gap-2">
-                            <Check className="h-4 w-4 text-nature" />
-                            <span>Ships within 24 hours</span>
+                        <li className="flex items-start gap-2">
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-nature" />
+                            <span>We ship twice a week, on purpose. Every order goes out from a freshly made batch.</span>
                         </li>
                         <li className="flex items-center gap-2">
                             <Check className="h-4 w-4 text-nature" />
-                            <span>Free shipping, always</span>
+                            <span>Free shipping on orders over ₹1500</span>
                         </li>
                     </ul>
                 </div>

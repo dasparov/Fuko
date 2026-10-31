@@ -46,7 +46,7 @@ export function orderMarkdown(event: OrderLogEvent, order: Order, extras: OrderL
         ``,
         `- **When:** ${istTimestamp(now)} IST`,
         `- **Amount to match in bank:** ₹${order.paymentAmount ?? order.total}`,
-        `- **Cart total:** ₹${order.total}`,
+        `- **Order total (incl. shipping):** ₹${order.total}`,
         `- **Items:** ${itemsSummary(order) || "—"}`,
         `- **Customer:** ${order.customerName || "—"}`,
         `- **Phone:** ${order.customerPhone || "—"}`,

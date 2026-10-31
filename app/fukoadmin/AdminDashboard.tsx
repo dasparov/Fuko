@@ -457,7 +457,8 @@ export default function AdminDashboard() {
         totalOrders: validOrders.length,
         revenue: validOrders.reduce((sum, o) => sum + o.total, 0),
         avgOrder: validOrders.length ? Math.round(validOrders.reduce((sum, o) => sum + o.total, 0) / validOrders.length) : 0,
-        activeProducts: products.filter(p => !p.isHidden).length
+        activeProducts: products.filter(p => !p.isHidden).length,
+        packetsSold: validOrders.reduce((sum, o) => sum + o.items.reduce((n, i) => n + i.quantity, 0), 0)
     }
 
     // Block render if not authenticated
@@ -1020,6 +1021,10 @@ export default function AdminDashboard() {
                                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1 group-hover:text-accent transition-colors">Active Blends</p>
                                 <p className="text-4xl font-heading font-bold text-gray-900">{stats.activeProducts}</p>
                             </button>
+                            <div className="col-span-2 md:col-span-4 bg-white p-8 rounded-[2rem] border border-gray-200 shadow-sm">
+                                <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Total Packets Sold</p>
+                                <p className="text-4xl font-heading font-bold text-gray-900">{stats.packetsSold}</p>
+                            </div>
                         </div>
 
                         {/* Analytics Detail Modal */}

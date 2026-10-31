@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button"
 import { AuthPanel } from "@/components/auth/AuthPanel"
 import { useCart } from "@/context/CartContext"
 import { saveOrderAction, confirmOrderPaymentAction, getUserProfileAction, updateUserProfileAction, getProductsAction } from "@/app/actions"
-import { Order, OrderStatus, DeliveryAddress, soldOutItems } from "@/lib/orders"
+import { Order, OrderStatus, DeliveryAddress, soldOutItems, shippingFor } from "@/lib/orders"
 import { ArrowLeft, Check, Copy, MapPin, CreditCard, ChevronRight, User, Image as ImageIcon, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -129,7 +129,9 @@ export default function CheckoutPage() {
 
     // The exact rupees-and-paise the buyer is asked for. Hoisted out of the
     // payment step so the pending order can be written with it.
-    const paymentAmount = ((cartTotal * 100 + paiseSuffix) / 100).toFixed(2)
+    const shipping = shippingFor(cartTotal)
+    const orderTotal = cartTotal + shipping
+    const paymentAmount = ((orderTotal * 100 + paiseSuffix) / 100).toFixed(2)
 
     // Write the order the moment the payment screen opens, before any money
     // moves. UPI has no callback: if the buyer pays and then closes the tab,
@@ -147,7 +149,7 @@ export default function CheckoutPage() {
                 date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
                 status: "Awaiting Payment",
                 items,
-                total: cartTotal,
+                total: orderTotal,
                 customerName: userName || "Customer",
                 customerPhone: userPhone,
                 deliveryAddress: selectedAddress ? {
@@ -166,7 +168,7 @@ export default function CheckoutPage() {
             if (await saveOrderAction(pending)) setOrderId(pending.id)
             else pendingOrderRef.current = false
         })()
-    }, [step, items, cartTotal, userName, userPhone, selectedAddress, paymentAmount])
+    }, [step, items, orderTotal, userName, userPhone, selectedAddress, paymentAmount])
 
     const handleUploadClick = () => {
         fileInputRef.current?.click()
@@ -582,7 +584,7 @@ export default function CheckoutPage() {
                         date: new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' }),
                         status: "Processing" as OrderStatus,
                         items: items,
-                        total: cartTotal,
+                        total: orderTotal,
                         customerName: userName || "Customer",
                         customerPhone: userPhone,
                         deliveryAddress: selectedAddress ? {
@@ -649,9 +651,13 @@ export default function CheckoutPage() {
                                 <p className="font-bold text-sm">₹{item.price * item.quantity}</p>
                             </div>
                         ))}
-                        <div className="mt-4 pt-4 border-t border-muted/10 flex justify-between font-heading text-lg font-bold">
+                        <div className="mt-4 pt-4 border-t border-muted/10 flex justify-between text-sm text-muted">
+                            <span>Shipping</span>
+                            <span>{shipping ? `₹${shipping}` : "Free"}</span>
+                        </div>
+                        <div className="mt-2 flex justify-between font-heading text-lg font-bold">
                             <span>Total</span>
-                            <span>₹{cartTotal}</span>
+                            <span>₹{orderTotal}</span>
                         </div>
                     </div>
 

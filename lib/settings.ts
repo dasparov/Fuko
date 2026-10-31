@@ -20,7 +20,7 @@ const STORAGE_KEY = "fuko_settings_v3"
 
 export const DEFAULT_SETTINGS: SiteSettings = {
     announcementBanner: {
-        text: "Free shipping, always",
+        text: "Free shipping on orders over ₹1500",
         isVisible: true,
         link: "/shop"
     },

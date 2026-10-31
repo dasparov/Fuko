@@ -2,12 +2,14 @@
 
 import { Button } from "@/components/ui/Button"
 import { useCart, CartItem } from "@/context/CartContext"
+import { shippingFor } from "@/lib/orders"
 import { ArrowLeft, Minus, Plus, Trash2 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 
 export default function CartPage() {
     const { items, addItem, removeItem, cartTotal } = useCart()
+    const shipping = shippingFor(cartTotal)
 
     /* Helper to decrease quantity or remove if 1 */
     const decreaseQuantity = (item: CartItem) => {
@@ -31,7 +33,7 @@ export default function CartPage() {
     }
 
     return (
-        <main className="min-h-screen bg-background pb-32 pt-20">
+        <main className="min-h-screen bg-background pb-72 pt-20">
             <div className="fixed top-0 z-40 w-full p-6 bg-background/80 backdrop-blur-md">
                 <div className="mx-auto flex w-full max-w-3xl items-center justify-between">
                     <Link href="/" className="flex items-center gap-2 font-heading text-lg font-bold">
@@ -81,9 +83,17 @@ export default function CartPage() {
 
             <div className="fixed bottom-20 left-0 w-full border-t border-muted/10 bg-background px-6 py-6">
                 <div className="mx-auto w-full max-w-3xl">
+                    <div className="mb-1 flex items-center justify-between text-sm text-muted">
+                        <span>Subtotal</span>
+                        <span>₹{cartTotal}</span>
+                    </div>
+                    <div className="mb-2 flex items-center justify-between text-sm text-muted">
+                        <span>Shipping</span>
+                        <span>{shipping ? `₹${shipping}` : "Free"}</span>
+                    </div>
                     <div className="mb-4 flex items-center justify-between font-heading text-xl font-bold">
                         <span>Total</span>
-                        <span>₹{cartTotal}</span>
+                        <span>₹{cartTotal + shipping}</span>
                     </div>
                     <Link href="/checkout">
                         <Button size="pill" variant="pill" className="w-full">

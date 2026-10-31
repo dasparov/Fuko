@@ -1,5 +1,19 @@
 import { describe, it, expect } from 'vitest'
-import { countsAsSale, soldOutItems, Order } from './orders'
+import { countsAsSale, soldOutItems, shippingFor, orderShipping, Order } from './orders'
+
+describe('shipping', () => {
+    it('charges up to and including 1500, free only above it', () => {
+        expect(shippingFor(1499)).toBe(60)
+        expect(shippingFor(1500)).toBe(60)
+        expect(shippingFor(1501)).toBe(0)
+    })
+
+    it('reads the fee back from a saved order, and 0 from orders before the fee', () => {
+        const items = [{ id: 'a', name: 'A', price: 500, quantity: 2, image: '' }]
+        expect(orderShipping({ total: 1060, items })).toBe(60)
+        expect(orderShipping({ total: 1000, items })).toBe(0)
+    })
+})
 
 const order = (over: Partial<Order>): Order => ({
     id: 'ORD-1',
@@ -11,6 +25,11 @@ const order = (over: Partial<Order>): Order => ({
 })
 
 describe('countsAsSale', () => {
+    it('never counts a cancelled order, even one that was verified', () => {
+        expect(countsAsSale(order({ status: 'Cancelled' }))).toBe(false)
+        expect(countsAsSale(order({ status: 'Cancelled', isPaymentVerified: true }))).toBe(false)
+    })
+
     it('never counts an order that is still awaiting payment', () => {
         // The whole point of the pending row: it must not inflate revenue.
         expect(countsAsSale(order({ status: 'Awaiting Payment' }))).toBe(false)
