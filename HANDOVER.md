@@ -1,10 +1,17 @@
 # FUKO26 — Handover
 
-_Last updated: 2026-08-09_
+_Last updated: 2026-10-31_
 
 ## TL;DR
 
-Live at **https://okfuko.shop**. **This session (08-08):** the admin's WhatsApp
+Live at **https://okfuko.shop**. **Latest (10-31, `105dce1`):** orders of ₹1500
+or less now pay **₹60 shipping**, the site says **we ship twice a week** from
+fresh batches, analytics has a **packets sold** counter, and **cancelled orders
+no longer count as sales**. Details and open checks in
+[Shipping and stats](#shipping-and-stats-2026-10-31). **No real order has been
+placed with the fee yet.**
+
+**08-08:** the admin's WhatsApp
 button now **follows the order status** — it sends a Shipped message on Shipped,
 Delivered on Delivered, and so on, instead of repeating the payment
 confirmation every time. Added a **courier tracking number** field the admin
