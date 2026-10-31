@@ -30,7 +30,7 @@ remains the first TODO.
 
 - **Production:** https://okfuko.shop — Vercel project `fuko`, team
   `kapildas-5794s-projects`, repo `github.com/dasparov/Fuko`, push to `main`
-  auto-deploys. Last deploy: 2026-08-09 (see `git log`).
+  auto-deploys. Last deploy: 2026-10-31 (see `git log`).
   **Watch out:** `vercel ls` can still show the *previous* deployment as Ready
   seconds after a push, so a "wait until not Building" loop exits immediately
   and verifies stale output. Confirm the deployment age is < your push.
@@ -39,7 +39,7 @@ remains the first TODO.
 - **Vercel CLI:** works via `npx -y vercel@latest …`, already authenticated as
   `kapildas-5794`, project linked. `env ls/add/rm` all confirmed working.
 - **Local dev:** `npm run dev` (use `localhost:3000`, not `0.0.0.0`, or Google
-  OAuth breaks). **Tests:** `npm test` (vitest, 26 tests). Direct psql to Neon
+  OAuth breaks). **Tests:** `npm test` (vitest, 50 tests). Direct psql to Neon
   fails from this machine (port 5432 blocked); use a Node script with `pg` +
   `dangerouslyDisableSandbox` instead — see scratchpad pattern from this session.
 
@@ -244,25 +244,44 @@ keeping, backup discarded.
 prod and live. Existing orders have it `NULL` → `undefined`, so they simply
 carry no tracking line until the admin types one.
 
-## ⚠ Deploys are broken, and main is ahead of production (2026-08-10)
+## Shipping and stats (2026-10-31)
 
-**The newest Vercel deployment is hours older than `main`.** Pushing to `main`
-stopped triggering a build partway through 2026-08-10. Nothing is failing —
-`vercel ls` shows every deployment `Ready`, there are just no new ones. The
-GitHub integration is not firing. Diagnose that first; until it is fixed,
-**a green `git push` does not mean the site changed.**
+**Shipping fee.** `shippingFor` in `lib/orders.ts` charges ₹60 up to and
+including ₹1500, free above it. The cart and checkout show the line, and the fee
+is part of the UPI amount.
 
-Verified live before it broke: the favicon, the blend meters, `/field-notes`.
-Everything after that is committed and pushed but **not on the site**: the
-mobile padding fix, the accent dot colour, the two-season correction, the nav
-link, the soils rewrite, and the copy pass.
+**`Order.total` now includes shipping.** There is no shipping column.
+`orderShipping` derives the fee as total minus items, so orders from before the
+fee still read as free with no migration. As a result admin revenue, AOV and the
+CSV export include shipping, while per-product revenue does not, so they will
+not add up exactly.
 
-To ship manually: `npx -y vercel@latest --prod --yes` from the repo root.
+**The fee is set in the browser.** The server saves whatever total checkout
+sends, as it always has. Money is checked by the admin matching the UPI amount.
 
-**Before running it, read the next item.** A manual deploy ships everything on
-`main`, including the copy pass the owner has not approved.
+**Delivery wording.** The 24-hour and 1-2 day promises are gone from the product
+page, support FAQ and WhatsApp confirmation. The Shipped message no longer
+promises an out-for-delivery message; that message and its admin button remain.
+
+**Stats.** `countsAsSale` now excludes Cancelled, so past figures drop wherever
+an order was cancelled. Analytics has a Total Packets Sold tile.
+
+**Deploys recovered.** The push of `105dce1` built on its own, so the 2026-08-10
+auto-deploy failure did not recur. The cause was never diagnosed. That deploy
+also shipped the August commits that had been stuck on `main`: mobile padding,
+accent dot colour, two-season correction, nav link, soils rewrite. If a push
+ever stops building again, ship with `npx -y vercel@latest --prod --yes`.
+
+**Verified:** tests, types and production build; `/support` shows the new wording
+live. **Not verified:** any of the UI in a browser (`chrome-devtools-axi` failed
+with a `pageId` error), and a real order with the fee.
 
 ## TODO: the humanized copy pass is parked, not lost
+
+**Out of date since 2026-10-31.** The patch no longer applies: it fails on
+`next-env.d.ts` and on `lib/whatsapp.ts`, whose messages have changed. Redo its
+WhatsApp section by hand and keep the twice-a-week wording.
+
 
 A humanizer pass over customer-facing copy was written on 2026-08-10, then
 **reverted off `main` before deploying** so the site kept its current wording
@@ -299,6 +318,13 @@ descriptions**, which live in Postgres rather than the repo and are the
 strongest copy on the site already.
 
 ## Open TODOs (next session)
+
+00. **Check the saved banner in `/fukoadmin`.** Text saved there overrides the
+    new default, and it was set to "Free shipping, always" on 08-09. Could not be
+    read from here. Change it to "Free shipping on orders over ₹1500" if needed.
+    Check the four product descriptions in Postgres for old delivery promises too.
+00b. **Place one real order under ₹1500 and one over.** Confirm the UPI amount,
+    the order page breakdown, the sheet row and the admin email.
 
 0. **Read the WhatsApp message copy in `lib/whatsapp.ts` (lines 18-24) and
    rewrite it.** It shipped as a first draft written by Claude, not by the
