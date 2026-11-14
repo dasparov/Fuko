@@ -17,7 +17,7 @@ export function whatsappMessage(order: Order): string {
 
     const byStatus: Record<OrderStatus, string> = {
         "Awaiting Payment": `Hi ${name}! We're holding your Fuko order ${order.id} — ${items} — but the ₹${amount} payment hasn't reached us yet. Reply here if you ran into trouble paying and we'll sort it out.`,
-        "Processing": `Hi ${name}! Your Fuko order ${order.id} is confirmed — ${items}, ₹${amount} received ✅ We ship twice a week, so yours goes out with our next fresh batch.`,
+        "Processing": `Hi ${name}! Your Fuko order ${order.id} is confirmed — ${items}, ₹${amount} received ✅ We ship once a week, so yours goes out with our next fresh batch.`,
         "Shipped": `Hi ${name}! Your Fuko order ${order.id} — ${items} — has shipped 📦${tracking}`,
         "Out for Delivery": `Hi ${name}! Your Fuko order ${order.id} is out for delivery today 🛵${tracking} Please keep your phone reachable for the delivery partner.`,
         "Delivered": `Hi ${name}! Your Fuko order ${order.id} has been delivered ✅ Hope you love it — reply here if anything isn't right.`,

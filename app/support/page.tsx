@@ -55,7 +55,7 @@ export default function SupportPage() {
                         </div>
                         <div className="p-4">
                             <h4 className="font-medium text-gray-900">How long does shipping take?</h4>
-                            <p className="text-sm text-gray-500 mt-2">We ship twice a week, on purpose, so every order goes out from a freshly made batch. Once shipped, delivery usually takes 5-7 business days depending on your location, and sometimes longer around local holidays and festivals.</p>
+                            <p className="text-sm text-gray-500 mt-2">We ship once a week, on purpose, so every order goes out from a freshly made batch. Once shipped, delivery usually takes 5-7 business days depending on your location, and sometimes longer around local holidays and festivals.</p>
                         </div>
                     </div>
                 </div>
