@@ -66,7 +66,7 @@ export default function ProfilePage() {
 
                 // Orders are keyed by phone (collected at checkout, stored on users.phone)
                 if (profile.phone) {
-                    const userOrders = await getOrdersForUserAction(profile.phone)
+                    const userOrders = await getOrdersForUserAction()
                     if (!cancelled) setActiveOrders(userOrders)
                 }
             } finally {

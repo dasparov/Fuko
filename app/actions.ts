@@ -85,8 +85,22 @@ export async function getOrdersAction(): Promise<Order[]> {
     }
 }
 
-export async function getOrdersForUserAction(phone: string): Promise<Order[]> {
+// Both customer-side reads are scoped to the signed-in user's phone, read from
+// the session — never from an argument. Server actions are public endpoints and
+// order ids are 4 digits, so trusting the caller would hand out every
+// customer's name, phone and address.
+async function sessionPhone(): Promise<string | null> {
+    const session = await auth()
+    const userId = (session?.user as { id?: string } | undefined)?.id
+    if (!userId) return null
+    const { rows } = await sql`SELECT phone FROM users WHERE id = ${userId}`
+    return rows[0]?.phone || null
+}
+
+export async function getOrdersForUserAction(): Promise<Order[]> {
     try {
+        const phone = await sessionPhone()
+        if (!phone) return []
         const { rows } = await sql`SELECT * FROM orders WHERE customer_phone = ${phone} ORDER BY created_at DESC`
         return rows.map(toOrder)
     } catch (error) {
@@ -97,7 +111,9 @@ export async function getOrdersForUserAction(phone: string): Promise<Order[]> {
 
 export async function getOrderByIdAction(id: string): Promise<Order | null> {
     try {
-        const { rows } = await sql`SELECT * FROM orders WHERE id = ${id}`
+        const phone = await sessionPhone()
+        if (!phone) return null
+        const { rows } = await sql`SELECT * FROM orders WHERE id = ${id} AND customer_phone = ${phone}`
         if (rows.length === 0) return null
         return toOrder(rows[0])
     } catch (error) {

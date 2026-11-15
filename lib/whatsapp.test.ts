@@ -47,6 +47,12 @@ describe('whatsappMessage', () => {
         expect(text).not.toContain('BD1234567IN')
     })
 
+    it('links every message to the order page', () => {
+        for (const status of ALL_STATUSES) {
+            expect(whatsappMessage(order({ status }))).toContain(`https://okfuko.shop/order/${order({}).id}`)
+        }
+    })
+
     it('falls back to a greeting when the order has no customer name', () => {
         expect(whatsappMessage(order({ customerName: undefined }))).toContain('Hi there!')
     })

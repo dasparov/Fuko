@@ -154,3 +154,8 @@ export function togglePaymentVerification(orderId: string, verified: boolean): b
     localStorage.setItem(STORAGE_KEY, JSON.stringify(orders))
     return true
 }
+
+// Delhivery's public tracking page with the AWB already filled in.
+export function delhiveryTrackingUrl(awb: string): string {
+    return `https://www.delhivery.com/track-v2/package/${encodeURIComponent(awb.trim())}`
+}

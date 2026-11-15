@@ -92,3 +92,24 @@ describe("updateUserProfileAction (session-based)", () => {
     expect(updateValues[1]).toBe("9876543210")
   })
 })
+
+describe("order reads are scoped to the signed-in user", () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it("returns nothing when signed out, without querying orders", async () => {
+    authMock.mockResolvedValue(null)
+    const { getOrderByIdAction, getOrdersForUserAction } = await import("@/app/actions")
+    expect(await getOrderByIdAction("ORD-1234")).toBeNull()
+    expect(await getOrdersForUserAction()).toEqual([])
+    expect(sqlMock).not.toHaveBeenCalled()
+  })
+
+  it("filters the order by the session user's phone", async () => {
+    authMock.mockResolvedValue({ user: { id: "7" } })
+    sqlMock.mockResolvedValueOnce({ rows: [{ phone: "9990001111" }] }).mockResolvedValueOnce({ rows: [] })
+    const { getOrderByIdAction } = await import("@/app/actions")
+    expect(await getOrderByIdAction("ORD-1234")).toBeNull()
+    const [, ...params] = sqlMock.mock.calls[1]
+    expect(params).toEqual(["ORD-1234", "9990001111"])
+  })
+})

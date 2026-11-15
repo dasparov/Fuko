@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/Button"
-import { Order, orderShipping } from "@/lib/orders"
+import { Order, orderShipping, delhiveryTrackingUrl } from "@/lib/orders"
 import { getOrderByIdAction } from "@/app/actions"
 import { Skeleton } from "@/components/ui/Skeleton"
 import { PageContainer } from "@/components/layout/PageContainer"
@@ -10,6 +10,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { useParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 // Honest progression for the manual-verification flow (no instant-shipping implication).
 const STATUS_STEPS = [
@@ -44,9 +45,13 @@ export default function OrderDetailsPage() {
     const id = params?.id as string
     const [order, setOrder] = useState<Order | null>(null)
     const [loading, setLoading] = useState(true)
+    const { status: authStatus } = useSession()
 
     useEffect(() => {
-        if (!id) return
+        // Orders are only readable by the account that placed them, so wait
+        // for the session before asking.
+        if (!id || authStatus === "loading") return
+        if (authStatus === "unauthenticated") { setLoading(false); return }
         let cancelled = false
         ;(async () => {
             try {
@@ -57,7 +62,7 @@ export default function OrderDetailsPage() {
             }
         })()
         return () => { cancelled = true }
-    }, [id])
+    }, [id, authStatus])
 
     if (loading) {
         return (
@@ -76,6 +81,16 @@ export default function OrderDetailsPage() {
                         <Skeleton className="h-28 w-full rounded-3xl" />
                     </div>
                 </PageContainer>
+            </main>
+        )
+    }
+
+    if (!order && authStatus === "unauthenticated") {
+        return (
+            <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+                <h1 className="font-heading text-2xl font-bold">Sign in to see your order</h1>
+                <p className="mt-2 text-sm text-muted">Use the account you placed order {id} with.</p>
+                <Link href={`/login?callbackUrl=${encodeURIComponent(`/order/${id}`)}`} className="mt-4 rounded-full bg-accent px-5 py-2 font-bold text-white">Sign in</Link>
             </main>
         )
     }
@@ -147,6 +162,16 @@ export default function OrderDetailsPage() {
                                         )
                                     })}
                                 </div>
+                                {order.trackingId && order.status !== "Processing" && order.status !== "Awaiting Payment" && (
+                                    <a
+                                        href={delhiveryTrackingUrl(order.trackingId)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-8 flex items-center justify-center gap-2 rounded-2xl bg-accent py-4 text-sm font-bold text-white"
+                                    >
+                                        <Truck className="h-4 w-4" /> Track on Delhivery · {order.trackingId}
+                                    </a>
+                                )}
                             </>
                         )}
                     </div>

@@ -1,4 +1,4 @@
-import { Order, OrderStatus } from "./orders"
+import { Order, OrderStatus, delhiveryTrackingUrl } from "./orders"
 
 // Text the admin sends from their own WhatsApp. It follows the order's saved
 // status, so the one button carries the payment confirmation first and each
@@ -12,12 +12,11 @@ export function whatsappMessage(order: Order): string {
     const name = order.customerName || "there"
     const items = order.items.map(i => `${i.name} x${i.quantity}`).join(", ")
     const amount = order.paymentAmount?.toFixed(2) ?? String(order.total)
-    // Only mentioned once the admin has actually entered one. The link opens
-    // Delhivery's tracking page with the AWB already filled in.
+    // Only mentioned once the admin has actually entered one.
     const awb = order.trackingId?.trim()
-    const tracking = awb
-        ? ` Tracking number: ${awb}. Track it here: https://www.delhivery.com/track-v2/package/${encodeURIComponent(awb)}`
-        : ""
+    const tracking = awb ? ` Tracking number: ${awb}. Track it here: ${delhiveryTrackingUrl(awb)}` : ""
+    // Every message ends with the order page, which shows status, items and tracking.
+    const orderLink = `\n\nYour order: https://okfuko.shop/order/${encodeURIComponent(order.id)}`
 
     const byStatus: Record<OrderStatus, string> = {
         "Awaiting Payment": `Hi ${name}! We're holding your Fuko order ${order.id} — ${items} — but the ₹${amount} payment hasn't reached us yet. Reply here if you ran into trouble paying and we'll sort it out.`,
@@ -28,7 +27,7 @@ export function whatsappMessage(order: Order): string {
         "Cancelled": `Hi ${name}, your Fuko order ${order.id} — ${items} — has been cancelled. Anything you've already paid will be refunded to the same UPI account. Reply here if you have questions.`,
     }
 
-    return byStatus[order.status]
+    return byStatus[order.status] + orderLink
 }
 
 // What the admin reads on the button, so which message is about to be sent is
