@@ -35,6 +35,7 @@ describe('whatsappMessage', () => {
     it('includes the tracking number only once the admin has entered one', () => {
         const withId = whatsappMessage(order({ status: 'Shipped', trackingId: 'BD1234567IN' }))
         expect(withId).toContain('Tracking number: BD1234567IN')
+        expect(withId).toContain('https://www.delhivery.com/track-v2/package/BD1234567IN')
 
         // No half-written "Tracking number:" line when the field is still empty.
         expect(whatsappMessage(order({ status: 'Shipped' }))).not.toContain('Tracking')

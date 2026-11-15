@@ -12,8 +12,12 @@ export function whatsappMessage(order: Order): string {
     const name = order.customerName || "there"
     const items = order.items.map(i => `${i.name} x${i.quantity}`).join(", ")
     const amount = order.paymentAmount?.toFixed(2) ?? String(order.total)
-    // Only mentioned once the admin has actually entered one.
-    const tracking = order.trackingId ? ` Tracking number: ${order.trackingId}.` : ""
+    // Only mentioned once the admin has actually entered one. The link opens
+    // Delhivery's tracking page with the AWB already filled in.
+    const awb = order.trackingId?.trim()
+    const tracking = awb
+        ? ` Tracking number: ${awb}. Track it here: https://www.delhivery.com/track-v2/package/${encodeURIComponent(awb)}`
+        : ""
 
     const byStatus: Record<OrderStatus, string> = {
         "Awaiting Payment": `Hi ${name}! We're holding your Fuko order ${order.id} — ${items} — but the ₹${amount} payment hasn't reached us yet. Reply here if you ran into trouble paying and we'll sort it out.`,
